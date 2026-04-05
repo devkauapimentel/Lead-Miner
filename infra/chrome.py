@@ -2,7 +2,9 @@
 infra/chrome.py — ChromeManager
 ================================
 Gerencia perfil do Chrome e configuração do WebDriver.
-Suporta detecção automática do binário do Chrome no Linux.
+Suporta 2 modos:
+  - "profile": Copia perfil do Chrome e abre nova instância
+  - "remote":  Conecta a um Chrome JÁ ABERTO (via Debug Port)
 """
 
 import os
@@ -37,43 +39,91 @@ class ChromeManager:
     """
     Gerencia a inicialização do Chrome para automação Selenium.
 
-    Responsabilidades:
-        - Detectar automaticamente o binário do Chrome instalado
-        - Copiar o perfil do Chrome do usuário para isolamento
-        - Configurar as Chrome Options para anti-detecção
-        - Criar e retornar a instância do WebDriver
+    Modos de conexão:
+        - "profile" (padrão): Copia o perfil do Chrome do usuário e
+          abre uma nova instância isolada. Útil para primeira vez.
+        - "remote": Conecta a um Chrome que JÁ ESTÁ ABERTO com
+          o WhatsApp logado. Útil para evitar re-login.
 
-    Design Pattern:
-        Encapsula toda a complexidade de configuração do Chrome
-        atrás de uma API simples (Facade de infra).
+    Para usar o modo remote, inicie o Chrome com:
+        google-chrome --remote-debugging-port=9222
+
+    Depois selecione "Usar Chrome Aberto" na GUI.
     """
 
     def __init__(self, config: dict):
-        """
-        Args:
-            config: Dicionário de configuração vindo do ConfigManager.
-                    Espera config["chrome"]["profile_path"] e config["chrome"]["binary"]
-        """
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
         chrome_cfg = config.get("chrome", {})
+        self.mode = chrome_cfg.get("mode", "profile")
+        self.debug_port = chrome_cfg.get("debug_port", 9222)
         self.profile_path = os.path.expanduser(
             chrome_cfg.get("profile_path", "~/.config/google-chrome")
         )
         self.binary = chrome_cfg.get("binary", "auto")
         self.robo_profile = os.path.join(base_dir, "chrome_profile_robo")
 
-    def detectar_binario(self) -> str:
+    def criar_driver(self) -> webdriver.Chrome:
         """
-        Encontra o binário do Chrome instalado no sistema.
-        Se o usuário configurou 'auto', tenta caminhos conhecidos.
+        Cria o WebDriver baseado no modo configurado.
 
         Returns:
-            Caminho absoluto para o binário do Chrome
-
-        Raises:
-            FileNotFoundError: Se nenhum Chrome for encontrado
+            Instância do selenium.webdriver.Chrome
         """
+        if self.mode == "remote":
+            return self._criar_driver_remoto()
+        else:
+            return self._criar_driver_perfil()
+
+    def _criar_driver_remoto(self) -> webdriver.Chrome:
+        """
+        Conecta a um Chrome já aberto via Remote Debugging Protocol.
+
+        O usuário precisa ter aberto o Chrome com:
+            google-chrome --remote-debugging-port=9222
+
+        Ou selecionar "Usar Chrome Aberto" na GUI que faz isso automaticamente.
+        """
+        log.info(f"[*] Conectando ao Chrome na porta {self.debug_port}...")
+
+        options = webdriver.ChromeOptions()
+        options.add_experimental_option("debuggerAddress", f"localhost:{self.debug_port}")
+
+        try:
+            driver = webdriver.Chrome(options=options)
+            log.info("[✓] Conectado ao Chrome aberto!")
+            return driver
+        except Exception as e:
+            raise ConnectionError(
+                f"Não conseguiu conectar ao Chrome na porta {self.debug_port}. "
+                f"Verifique se o Chrome está aberto com --remote-debugging-port={self.debug_port}\n"
+                f"Erro: {e}"
+            )
+
+    def _criar_driver_perfil(self) -> webdriver.Chrome:
+        """
+        Cria nova instância do Chrome com perfil copiado.
+        Modo padrão — abre um Chrome novo.
+        """
+        self.copiar_perfil()
+        binary = self.detectar_binario()
+
+        options = webdriver.ChromeOptions()
+        options.add_argument(f"--user-data-dir={self.robo_profile}")
+        options.add_argument("--profile-directory=Default")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--remote-allow-origins=*")
+        options.add_argument("--disable-gpu")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("useAutomationExtension", False)
+        options.binary_location = binary
+
+        driver = webdriver.Chrome(options=options)
+        log.info("[✓] Chrome WebDriver criado")
+        return driver
+
+    def detectar_binario(self) -> str:
         if self.binary != "auto" and os.path.exists(self.binary):
             log.info(f"Chrome configurado: {self.binary}")
             return self.binary
@@ -89,12 +139,6 @@ class ChromeManager:
         )
 
     def detectar_perfil(self) -> str:
-        """
-        Encontra o perfil do Chrome do usuário.
-
-        Returns:
-            Caminho absoluto para o diretório do perfil
-        """
         if os.path.exists(self.profile_path):
             return self.profile_path
 
@@ -109,13 +153,6 @@ class ChromeManager:
         )
 
     def copiar_perfil(self) -> None:
-        """
-        Copia o perfil do Chrome do usuário para um diretório isolado
-        do robô, evitando conflitos com o Chrome aberto.
-
-        Ignora arquivos de lock, cache e Service Workers para
-        reduzir tamanho e evitar conflitos.
-        """
         if os.path.exists(self.robo_profile):
             log.info("[*] Perfil do robô já existe. Reutilizando...")
             return
@@ -144,41 +181,32 @@ class ChromeManager:
             dirs_exist_ok=True
         )
 
-        # Copiar Local State (necessário para sessão)
         local_state = os.path.join(perfil_origem, "Local State")
         if os.path.exists(local_state):
             shutil.copy2(local_state, os.path.join(self.robo_profile, "Local State"))
 
         log.info("[✓] Perfil copiado com sucesso!")
 
-    def criar_driver(self) -> webdriver.Chrome:
-        """
-        Cria e retorna uma instância do Chrome WebDriver
-        configurada com anti-detecção e perfil isolado.
-
-        Returns:
-            Instância do selenium.webdriver.Chrome pronta para uso
-        """
-        self.copiar_perfil()
-        binary = self.detectar_binario()
-
-        options = webdriver.ChromeOptions()
-        options.add_argument(f"--user-data-dir={self.robo_profile}")
-        options.add_argument("--profile-directory=Default")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--remote-allow-origins=*")
-        options.add_argument("--disable-gpu")
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option("useAutomationExtension", False)
-        options.binary_location = binary
-
-        driver = webdriver.Chrome(options=options)
-        log.info("[✓] Chrome WebDriver criado")
-        return driver
-
     def limpar_perfil(self) -> None:
         """Remove o perfil clonado do robô (útil para reset de sessão)."""
         if os.path.exists(self.robo_profile):
             shutil.rmtree(self.robo_profile)
             log.info("[✓] Perfil do robô removido")
+
+    @staticmethod
+    def iniciar_chrome_debug(port: int = 9222) -> None:
+        """
+        Inicia o Chrome com remote debugging habilitado.
+        Útil para o modo "Usar Chrome Aberto".
+        """
+        import subprocess
+        for path in CHROME_PATHS:
+            if os.path.exists(path):
+                log.info(f"[*] Iniciando Chrome com debug na porta {port}...")
+                subprocess.Popen(
+                    [path, f"--remote-debugging-port={port}"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                return
+        raise FileNotFoundError("Chrome não encontrado para iniciar com debug")

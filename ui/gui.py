@@ -110,8 +110,8 @@ class PegadorApp(ctk.CTk):
 
         # Configuração da janela
         self.title("⚡ Pegador de Contato v2.0")
-        self.geometry("750x680")
-        self.minsize(650, 600)
+        self.geometry("650x550")
+        self.minsize(550, 450)
 
         # Aparência
         ctk.set_appearance_mode("dark")
@@ -182,13 +182,23 @@ class PegadorApp(ctk.CTk):
         row_num.pack(fill="x", pady=2)
         ctk.CTkLabel(row_num, text="Meu Número:").pack(
             side="left", padx=(0, 8))
-        self.entry_number = ctk.CTkEntry(row_num, placeholder_text="5521994538190")
+            
+        self.number_var = ctk.StringVar()
+        self.number_var.trace_add("write", self._format_phone)
+        
+        self.entry_number = ctk.CTkEntry(row_num, placeholder_text="+55 (21) 99453-8190", textvariable=self.number_var)
         self.entry_number.pack(side="left", fill="x", expand=True)
 
         # --- Chrome ---
-        ctk.CTkLabel(scroll, text="🌐 Chrome",
+        ctk.CTkLabel(scroll, text="🌐 Conexão do WhatsApp",
                       font=ctk.CTkFont(size=14, weight="bold")).pack(
             anchor="w", pady=(15, 5))
+            
+        self.chrome_mode_var = ctk.StringVar(value="profile")
+        row_mode_chrome = ctk.CTkFrame(scroll, fg_color="transparent")
+        row_mode_chrome.pack(fill="x", pady=(2, 10))
+        ctk.CTkRadioButton(row_mode_chrome, text="🎯 Usar novo Chrome (Perfil Clonado)", variable=self.chrome_mode_var, value="profile").pack(side="left", padx=(10, 20))
+        ctk.CTkRadioButton(row_mode_chrome, text="🔗 Usar Chrome Aberto (Já logado)", variable=self.chrome_mode_var, value="remote").pack(side="left")
 
         row_chrome_bin = ctk.CTkFrame(scroll, fg_color="transparent")
         row_chrome_bin.pack(fill="x", pady=2)
@@ -428,10 +438,15 @@ class PegadorApp(ctk.CTk):
         chrome_bin = self.entry_chrome_bin.get().strip() or "auto"
         chrome_profile = self.entry_chrome_profile.get().strip() or "~/.config/google-chrome"
 
+        
+        import re
+        raw_number = re.sub(r'\D', '', self.entry_number.get())
+
         return {
             "business_name": self.entry_business.get().strip() or "Meu Negócio",
-            "own_number": self.entry_number.get().strip(),
+            "own_number": raw_number,
             "chrome": {
+                "mode": self.chrome_mode_var.get(),
                 "profile_path": chrome_profile,
                 "binary": chrome_bin,
             },
@@ -457,6 +472,8 @@ class PegadorApp(ctk.CTk):
         self.entry_number.insert(0, c.get("own_number", ""))
 
         chrome = c.get("chrome", {})
+        self.chrome_mode_var.set(chrome.get("mode", "profile"))
+        
         self.entry_chrome_bin.delete(0, "end")
         chrome_bin = chrome.get("binary", "auto")
         if chrome_bin != "auto":
@@ -634,6 +651,28 @@ class PegadorApp(ctk.CTk):
             secs = elapsed % 60
             self.lbl_time.configure(text=f"{mins:02d}:{secs:02d}")
             self.timer_job = self.after(1000, self._update_timer)
+
+
+    def _format_phone(self, *args):
+        """Formata automaticamente o número no entry: +55 (21) 99999-9999"""
+        raw = self.number_var.get()
+        import re
+        digits = re.sub(r'\D', '', raw)
+        
+        if not digits:
+            return
+            
+        formatted = f"+{digits[:2]}"
+        if len(digits) > 2:
+            formatted += f" ({digits[2:4]})"
+        if len(digits) > 4:
+            if len(digits) > 9:
+                formatted += f" {digits[4:9]}-{digits[9:13]}"
+            else:
+                formatted += f" {digits[4:]}"
+                
+        if raw != formatted:
+            self.number_var.set(formatted)
 
 
 def run_gui():

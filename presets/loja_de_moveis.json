@@ -1,0 +1,23 @@
+{
+  "business_name": "Minha Loja de Móveis",
+  "own_number": "",
+  "filter_mode": "labels",
+  "labels": {
+    "include": [
+      "Lead Anuncio",
+      "Novo cliente",
+      "Interesse Poltrona",
+      "Interesse Sofá",
+      "Orcamento solicitado",
+      "Repescagem"
+    ],
+    "exclude": [
+      "Venda concluída",
+      "Cliente Vip",
+      "Garantia",
+      "Reclamação",
+      "Entregue",
+      "Fornecedor"
+    ]
+  }
+}

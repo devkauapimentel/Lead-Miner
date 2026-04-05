@@ -1,0 +1,22 @@
+{
+  "business_name": "Personal Trainer",
+  "own_number": "",
+  "filter_mode": "labels",
+  "labels": {
+    "include": [
+      "Lead Instagram",
+      "Lead Anuncio",
+      "Avaliação pendente",
+      "Ex-aluno",
+      "Interesse Consultoria"
+    ],
+    "exclude": [
+      "Aluno Ativo",
+      "Pagamento Atrasado",
+      "Renovação",
+      "Parceria",
+      "Academia",
+      "Gympass"
+    ]
+  }
+}
