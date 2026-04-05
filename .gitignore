@@ -1,0 +1,42 @@
+# =============================================
+# Dados pessoais (LGPD) — NUNCA versionar
+# =============================================
+leads_remarketing.csv
+progresso.json
+scraper.log
+
+# Sessão autenticada do navegador
+chrome_profile_robo/
+
+# =============================================
+# Ambiente virtual Python
+# =============================================
+venv/
+
+# =============================================
+# Caches e artefatos
+# =============================================
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# =============================================
+# Config local (contém número de telefone)
+# =============================================
+config.json
+
+# =============================================
+# IDE
+# =============================================
+.vscode/
+.idea/
+
+# =============================================
+# Dados de execução gerados
+# =============================================
+data/leads_remarketing.csv
+data/progresso.json
+data/scraper.log
