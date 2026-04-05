@@ -115,9 +115,10 @@ class ChromeManager:
             import subprocess
             import time
             
-            # Tentar matar apenas instâncias presas na porta de debug
-            os.system("pkill -f 'chrome.*remote-debugging-port=9222'")
-            time.sleep(1)
+            # Matar TODAS as instâncias do Chrome. Se o Chrome original estiver rodando em background (mesmo fechado), ele rouba a sessão e não abre a porta 9222!
+            log.info("[*] Fechando instâncias do Chrome em background para forçar controle...")
+            os.system("pkill -f chrome")
+            time.sleep(2)
             
             comando = [
                 binary,
