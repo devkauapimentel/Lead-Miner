@@ -154,7 +154,18 @@ class ChromeManager:
 
     def copiar_perfil(self) -> None:
         if os.path.exists(self.robo_profile):
-            log.info("[*] Perfil do robô já existe. Reutilizando...")
+            log.info("[*] Perfil do robô já existe. Limpando locks residuais e reutilizando...")
+            # Limpar lockfiles que sobram após um crash ou pkill
+            for lock_file in ['SingletonLock', 'SingletonSocket', 'SingletonCookie']:
+                lock_path = os.path.join(self.robo_profile, lock_file)
+                if os.path.exists(lock_path) or os.path.islink(lock_path):
+                    try:
+                        if os.path.islink(lock_path):
+                            os.unlink(lock_path)
+                        else:
+                            os.remove(lock_path)
+                    except Exception:
+                        pass
             return
 
         perfil_origem = self.detectar_perfil()
