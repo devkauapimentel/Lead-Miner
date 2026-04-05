@@ -123,12 +123,16 @@ class ChromeManager:
             comando = [
                 binary,
                 "--remote-debugging-port=9222",
+                "--remote-allow-origins=*",
+                "--ozone-platform-hint=auto",
                 f"--user-data-dir={user_data_dir}",
                 f"--profile-directory={profile_dir}"
             ]
-            subprocess.Popen(comando, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            log.info("[*] Aguardando 3s para o Chrome nativo processar o GNOME Keyring...")
-            time.sleep(3)
+            
+            # Executar sem DEVNULL no stderr para podermos pegar erros no log se crashar
+            subprocess.Popen(comando, stdout=subprocess.DEVNULL)
+            log.info("[*] Aguardando 4s para o Chrome nativo processar o GNOME Keyring e abrir WebSocket...")
+            time.sleep(4)
             
             options.debugger_address = "127.0.0.1:9222"
         else:
