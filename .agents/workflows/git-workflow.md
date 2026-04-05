@@ -206,6 +206,7 @@ chore(deps): atualizar selenium de 4.18.1 para 4.20.0
 
 Antes de abrir qualquer Pull Request, confirme:
 
+- [ ] `CHANGELOG.md` foi atualizado com as alterações desta branch (ver `agents.md` Seção 0).
 - [ ] `git status` limpo — nenhum arquivo sensível tracked (ver `/versioning-workflow`).
 - [ ] Testou com `MAX_CONTATOS = 10` localmente sem erros de exceção.
 - [ ] Os seletores XPath/CSS estão funcionando na versão atual do WhatsApp Web.
