@@ -1,8 +1,8 @@
 """
-ui/cli.py — Interface de Linha de Comando (Terminal Premium)
-=============================================================
-Menu interativo estilizado com cores, banners e feedback visual.
-Usa questionary para checkboxes e prompts interativos.
+ui/cli.py — Interface de Terminal Premium
+==========================================
+Terminal interativo com design moderno, cores e UX pensada
+para leigos: explicações claras em cada passo.
 """
 
 import os
@@ -13,8 +13,9 @@ import logging
 try:
     import questionary
     from questionary import Style
+    HAS_QUESTIONARY = True
 except ImportError:
-    questionary = None
+    HAS_QUESTIONARY = False
 
 # Adicionar raiz ao path
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,285 +26,329 @@ from core.config_manager import ConfigManager, KNOWN_LABELS
 
 log = logging.getLogger("pegador")
 
-# =====================================================================
-# CORES ANSI PARA OUTPUT BONITO
-# =====================================================================
+
+# ═════════════════════════════════════════════════════════════════════
+# CORES ANSI
+# ═════════════════════════════════════════════════════════════════════
 
 class C:
-    """Cores ANSI para terminal."""
-    RESET   = "\033[0m"
-    BOLD    = "\033[1m"
-    DIM     = "\033[2m"
-    RED     = "\033[91m"
-    GREEN   = "\033[92m"
-    YELLOW  = "\033[93m"
-    BLUE    = "\033[94m"
-    MAGENTA = "\033[95m"
-    CYAN    = "\033[96m"
-    WHITE   = "\033[97m"
-    GRAY    = "\033[90m"
-    BG_DARK = "\033[48;5;234m"
+    R   = "\033[0m"       # Reset
+    B   = "\033[1m"       # Bold
+    D   = "\033[2m"       # Dim
+    RED = "\033[38;5;203m"
+    GRN = "\033[38;5;114m"
+    YLW = "\033[38;5;221m"
+    BLU = "\033[38;5;111m"
+    CYN = "\033[38;5;80m"
+    MAG = "\033[38;5;176m"
+    WHT = "\033[97m"
+    GRY = "\033[38;5;244m"
+    ORG = "\033[38;5;208m"
 
-# Estilo do questionary (combinando com nossas cores)
-CLI_STYLE = Style([
+# Estilo questionary
+Q_STYLE = Style([
     ('qmark', 'fg:#e94560 bold'),
     ('question', 'fg:#ffffff bold'),
-    ('answer', 'fg:#53e683 bold'),
+    ('answer', 'fg:#7bed9f bold'),
     ('pointer', 'fg:#e94560 bold'),
     ('highlighted', 'fg:#e94560 bold'),
-    ('selected', 'fg:#53e683'),
-    ('separator', 'fg:#6c6c6c'),
-    ('instruction', 'fg:#6c6c6c'),
-]) if questionary else None
+    ('selected', 'fg:#7bed9f'),
+    ('separator', 'fg:#636e72'),
+    ('instruction', 'fg:#636e72 italic'),
+]) if HAS_QUESTIONARY else None
 
 
-# =====================================================================
+# ═════════════════════════════════════════════════════════════════════
 # COMPONENTES VISUAIS
-# =====================================================================
+# ═════════════════════════════════════════════════════════════════════
 
-def clear_screen():
-    """Limpa o terminal."""
+def cls():
     os.system('clear' if os.name != 'nt' else 'cls')
 
 
-def print_banner():
-    """Banner estilizado."""
-    clear_screen()
+def banner():
+    cls()
     print(f"""
-{C.CYAN}{C.BOLD}  ╔══════════════════════════════════════════════╗
-  ║                                              ║
-  ║   ⚡  PEGADOR DE CONTATO  v2.0               ║
-  ║   ─────────────────────────────              ║
-  ║   Extrator de Leads do WhatsApp Business     ║
-  ║                                              ║
-  ╚══════════════════════════════════════════════╝{C.RESET}
+  {C.CYN}╔{'═' * 52}╗
+  ║{C.R}                                                    {C.CYN}║
+  ║{C.R}   {C.B}{C.WHT}⚡  P E G A D O R   D E   C O N T A T O{C.R}          {C.CYN}║
+  ║{C.R}   {C.GRY}v2.0 — Extrator de Leads WhatsApp Business{C.R}     {C.CYN}║
+  ║{C.R}                                                    {C.CYN}║
+  ╚{'═' * 52}╝{C.R}
 """)
 
 
-def print_divider(title: str = ""):
-    """Linha divisória com título opcional."""
-    if title:
-        print(f"\n  {C.CYAN}{'─' * 3} {C.BOLD}{title} {C.RESET}{C.CYAN}{'─' * (40 - len(title))}{C.RESET}")
+def line(text="", char="─", width=52):
+    if text:
+        pad = width - len(text) - 2
+        left = pad // 2
+        right = pad - left
+        print(f"  {C.GRY}{char * left} {C.B}{C.WHT}{text} {C.GRY}{char * right}{C.R}")
     else:
-        print(f"  {C.GRAY}{'─' * 50}{C.RESET}")
+        print(f"  {C.GRY}{char * width}{C.R}")
 
 
-def print_success(msg: str):
-    print(f"  {C.GREEN}✅ {msg}{C.RESET}")
+def ok(msg):
+    print(f"  {C.GRN}✓{C.R} {msg}")
 
 
-def print_error(msg: str):
-    print(f"  {C.RED}❌ {msg}{C.RESET}")
+def err(msg):
+    print(f"  {C.RED}✗{C.R} {msg}")
 
 
-def print_warning(msg: str):
-    print(f"  {C.YELLOW}⚠️  {msg}{C.RESET}")
+def warn(msg):
+    print(f"  {C.YLW}!{C.R} {msg}")
 
 
-def print_info(msg: str):
-    print(f"  {C.BLUE}ℹ  {msg}{C.RESET}")
+def info(msg):
+    print(f"  {C.BLU}›{C.R} {msg}")
 
 
-def print_label(label: str, value: str):
-    """Exibe um par label: valor alinhado."""
-    print(f"  {C.GRAY}{label:.<20s}{C.RESET} {C.WHITE}{value}{C.RESET}")
+def hint(msg):
+    print(f"  {C.D}{msg}{C.R}")
 
 
-def print_tag_list(title: str, tags: list, color: str):
-    """Exibe uma lista de tags com cor."""
-    if tags:
-        tags_str = f"{C.RESET}{C.GRAY}, {color}".join(tags)
-        print(f"  {C.GRAY}{title:.<20s}{C.RESET} {color}{tags_str}{C.RESET}")
-    else:
-        print(f"  {C.GRAY}{title:.<20s}{C.RESET} {C.DIM}(nenhuma){C.RESET}")
+def field(label, value, label_color=C.GRY, value_color=C.WHT):
+    dots = "." * max(1, 22 - len(label))
+    print(f"  {label_color}{label}{C.R}{C.GRY}{dots}{C.R} {value_color}{value}{C.R}")
 
 
-def confirm_action(msg: str) -> bool:
-    """Confirmação com estilo."""
-    if questionary:
-        return questionary.confirm(msg, default=True, style=CLI_STYLE).ask()
-    resp = input(f"  {C.YELLOW}? {msg} (S/n): {C.RESET}").strip().lower()
-    return resp in ('', 's', 'sim', 'y', 'yes')
+def tag_chips(tags, color):
+    """Mostra tags como chips visuais inline."""
+    if not tags:
+        print(f"  {C.D}  (nenhuma selecionada){C.R}")
+        return
+    line_str = "  "
+    for t in tags:
+        line_str += f" {color}[{C.B}{t}{C.R}{color}]{C.R}"
+    print(line_str)
 
 
-def press_enter():
-    """Pausa aguardando Enter."""
-    input(f"\n  {C.DIM}Pressione Enter para continuar...{C.RESET}")
+def wait_enter():
+    input(f"\n  {C.D}↵ Pressione Enter...{C.R}")
 
 
-# =====================================================================
-# TELAS
-# =====================================================================
+def ask_yes(msg):
+    if HAS_QUESTIONARY:
+        return questionary.confirm(msg, default=True, style=Q_STYLE).ask()
+    r = input(f"  {C.YLW}?{C.R} {msg} {C.D}(S/n){C.R} ").strip().lower()
+    return r in ('', 's', 'sim', 'y', 'yes')
 
-def show_config_summary(config: dict):
-    """Exibe resumo da configuração atual de forma visual."""
-    print_divider("CONFIGURAÇÃO ATUAL")
+
+# ═════════════════════════════════════════════════════════════════════
+# RESUMO DA CONFIGURAÇÃO
+# ═════════════════════════════════════════════════════════════════════
+
+def show_resume(config):
+    """Mostra um resumo visual da configuração ativa."""
+    line("SEU PERFIL")
     print()
-    print_label("Negócio", config.get("business_name", "Não definido"))
-    print_label("Número", config.get("own_number", "Não definido") or f"{C.RED}⚠ Não configurado")
-    print_label("Modo filtro", config.get("filter_mode", "labels").upper())
-    print()
-
-    labels = config.get("labels", {})
-    print_tag_list("Incluir (leads)", labels.get("include", []), C.GREEN)
-    print_tag_list("Excluir (bloq.)", labels.get("exclude", []), C.RED)
-    print()
-
-    blacklist = config.get("blacklist_names", [])
-    if blacklist:
-        print_tag_list("Lista negra", blacklist, C.YELLOW)
+    field("Negócio", config.get("business_name") or f"{C.RED}Não definido")
+    num = config.get("own_number")
+    field("Número", num if num else f"{C.RED}⚠ Configure seu número!")
+    field("Modo", config.get("filter_mode", "labels").upper())
     print()
 
+    inc = config.get("labels", {}).get("include", [])
+    exc = config.get("labels", {}).get("exclude", [])
 
-def show_main_menu() -> str:
-    """Menu principal com visual premium."""
-    print_divider("MENU PRINCIPAL")
+    print(f"  {C.GRN}{C.B}INCLUIR{C.R} {C.D}(contatos com essas tags viram leads):{C.R}")
+    tag_chips(inc, C.GRN)
+    print()
+    print(f"  {C.RED}{C.B}EXCLUIR{C.R} {C.D}(contatos com essas tags são bloqueados):{C.R}")
+    tag_chips(exc, C.RED)
     print()
 
-    if not questionary:
-        print(f"  {C.GREEN}1{C.RESET} 🚀 Iniciar Extração")
-        print(f"  {C.CYAN}2{C.RESET} 📌 Configurar Etiquetas")
-        print(f"  {C.CYAN}3{C.RESET} 📋 Dados do Negócio")
-        print(f"  {C.CYAN}4{C.RESET} 📦 Carregar Preset")
-        print(f"  {C.YELLOW}5{C.RESET} 🗑️  Limpar Progresso")
-        print(f"  {C.RED}0{C.RESET} ❌ Sair")
-        print()
-        choice = input(f"  {C.BOLD}Escolha uma opção: {C.RESET}").strip()
-        mapping = {
-            "1": "start", "2": "labels", "3": "business",
-            "4": "preset", "5": "clear", "0": "exit",
-        }
-        return mapping.get(choice, "")
 
-    choices = [
-        questionary.Choice("🚀 Iniciar Extração", value="start"),
-        questionary.Separator("─── Configuração ───"),
-        questionary.Choice("📌 Configurar Etiquetas", value="labels"),
-        questionary.Choice("📋 Dados do Negócio", value="business"),
-        questionary.Choice("📦 Carregar Preset", value="preset"),
-        questionary.Separator(),
-        questionary.Choice("🗑️  Limpar Progresso", value="clear"),
-        questionary.Choice("❌ Sair", value="exit"),
-    ]
+# ═════════════════════════════════════════════════════════════════════
+# MENU PRINCIPAL
+# ═════════════════════════════════════════════════════════════════════
 
-    result = questionary.select(
-        "O que deseja fazer?",
-        choices=choices,
-        style=CLI_STYLE,
-        instruction="(use ↑ ↓ para navegar, Enter para selecionar)",
-    ).ask()
-
-    return result or "exit"
-
-
-# =====================================================================
-# AÇÕES
-# =====================================================================
-
-def configure_labels(config: dict, cm: ConfigManager) -> dict:
-    """Tela de configuração de etiquetas."""
-    print_banner()
-    print_divider("ETIQUETAS DE INCLUSÃO")
-    print(f"  {C.DIM}Contatos com essas tags serão{C.RESET} {C.GREEN}EXTRAÍDOS{C.RESET}")
-    print(f"  {C.DIM}Use ESPAÇO para marcar/desmarcar, ENTER para confirmar{C.RESET}")
+def main_menu():
+    line("O QUE DESEJA FAZER?")
     print()
 
-    current_include = config.get("labels", {}).get("include", [])
-
-    if questionary:
-        include = questionary.checkbox(
-            "Etiquetas para INCLUIR:",
+    if HAS_QUESTIONARY:
+        return questionary.select(
+            "",
             choices=[
-                questionary.Choice(label, checked=(label in current_include))
-                for label in KNOWN_LABELS
+                questionary.Choice(
+                    f"{'🚀 Iniciar Extração':.<40s} Começa a pegar os leads agora",
+                    value="start"),
+                questionary.Separator(f"  {'─' * 48}"),
+                questionary.Choice(
+                    f"{'📌 Configurar Etiquetas':.<40s} Define quais tags incluir/excluir",
+                    value="labels"),
+                questionary.Choice(
+                    f"{'📋 Dados do Negócio':.<40s} Nome, número, lista negra",
+                    value="business"),
+                questionary.Choice(
+                    f"{'📦 Carregar Preset':.<40s} Config pronta por tipo de negócio",
+                    value="preset"),
+                questionary.Separator(f"  {'─' * 48}"),
+                questionary.Choice(
+                    f"{'🗑️  Limpar Progresso':.<40s} Apaga leads e recomeça do zero",
+                    value="clear"),
+                questionary.Choice(
+                    f"{'❌ Sair':.<40s}",
+                    value="exit"),
             ],
-            style=CLI_STYLE,
-            instruction="(espaço = marcar, enter = confirmar)",
+            style=Q_STYLE,
+            instruction="  ↑↓ navegar  ·  Enter selecionar",
         ).ask()
     else:
-        include = _manual_checkbox("INCLUIR", KNOWN_LABELS, current_include)
+        opts = [
+            ("1", "🚀", "Iniciar Extração", "Começa a pegar os leads"),
+            ("2", "📌", "Configurar Etiquetas", "Tags de inclusão/exclusão"),
+            ("3", "📋", "Dados do Negócio", "Nome, número, lista negra"),
+            ("4", "📦", "Carregar Preset", "Config pronta por segmento"),
+            ("5", "🗑️ ", "Limpar Progresso", "Apaga e recomeça do zero"),
+            ("0", "❌", "Sair", ""),
+        ]
+        for num, icon, name, desc in opts:
+            desc_str = f" {C.D}— {desc}{C.R}" if desc else ""
+            print(f"   {C.CYN}{C.B}{num}{C.R}  {icon}  {name}{desc_str}")
+        print()
+        c = input(f"  {C.B}›{C.R} ").strip()
+        return {"1": "start", "2": "labels", "3": "business",
+                "4": "preset", "5": "clear", "0": "exit"}.get(c, "")
+
+
+# ═════════════════════════════════════════════════════════════════════
+# CONFIGURAR ETIQUETAS
+# ═════════════════════════════════════════════════════════════════════
+
+def configure_labels(config, cm):
+    banner()
+
+    # ── Passo 1: INCLUSÃO ──
+    line("PASSO 1 DE 2 — ETIQUETAS DE INCLUSÃO", "═")
+    print()
+    print(f"  {C.GRN}{C.B}Quais etiquetas identificam um LEAD?{C.R}")
+    print(f"  {C.D}Contatos com essas tags serão extraídos para o CSV.{C.R}")
+    print(f"  {C.D}Ex: Se você marcar \"Lead Anuncio\", todo contato que{C.R}")
+    print(f"  {C.D}tiver essa etiqueta no WhatsApp será puxado.{C.R}")
+    print()
+
+    current_inc = config.get("labels", {}).get("include", [])
+
+    if HAS_QUESTIONARY:
+        print(f"  {C.D}  ESPAÇO = marcar/desmarcar  ·  ENTER = confirmar{C.R}\n")
+        include = questionary.checkbox(
+            "Marque as etiquetas de INCLUSÃO:",
+            choices=[
+                questionary.Choice(
+                    f"{label}  {C.D}{'← selecionada' if label in current_inc else ''}{C.R}",
+                    value=label,
+                    checked=(label in current_inc),
+                )
+                for label in KNOWN_LABELS
+            ],
+            style=Q_STYLE,
+            instruction="",
+        ).ask()
+    else:
+        include = _fallback_checkbox("INCLUIR", KNOWN_LABELS, current_inc, C.GRN)
 
     if include is None:
         return config
 
+    # ── Passo 2: EXCLUSÃO ──
+    banner()
+    line("PASSO 2 DE 2 — ETIQUETAS DE EXCLUSÃO", "═")
     print()
-    print_divider("ETIQUETAS DE EXCLUSÃO")
-    print(f"  {C.DIM}Contatos com essas tags serão{C.RESET} {C.RED}BLOQUEADOS{C.RESET}")
+    print(f"  {C.RED}{C.B}Quais etiquetas devem BLOQUEAR um contato?{C.R}")
+    print(f"  {C.D}Se um contato tiver uma dessas tags, ele NÃO será{C.R}")
+    print(f"  {C.D}extraído — mesmo que tambem tenha tag de inclusão.{C.R}")
+    print(f"  {C.D}Ex: \"Agendada\" bloqueia um lead que já virou cliente.{C.R}")
     print()
 
-    current_exclude = config.get("labels", {}).get("exclude", [])
+    current_exc = config.get("labels", {}).get("exclude", [])
 
-    if questionary:
+    if HAS_QUESTIONARY:
+        print(f"  {C.D}  ESPAÇO = marcar/desmarcar  ·  ENTER = confirmar{C.R}\n")
         exclude = questionary.checkbox(
-            "Etiquetas para EXCLUIR:",
+            "Marque as etiquetas de EXCLUSÃO:",
             choices=[
-                questionary.Choice(label, checked=(label in current_exclude))
+                questionary.Choice(
+                    f"{label}  {C.D}{'← selecionada' if label in current_exc else ''}{C.R}",
+                    value=label,
+                    checked=(label in current_exc),
+                )
                 for label in KNOWN_LABELS
             ],
-            style=CLI_STYLE,
-            instruction="(espaço = marcar, enter = confirmar)",
+            style=Q_STYLE,
+            instruction="",
         ).ask()
     else:
-        exclude = _manual_checkbox("EXCLUIR", KNOWN_LABELS, current_exclude)
+        exclude = _fallback_checkbox("EXCLUIR", KNOWN_LABELS, current_exc, C.RED)
 
     if exclude is None:
         return config
 
-    # Escolher modo
+    # ── Confirmação visual ──
+    banner()
+    line("CONFIRME SUA CONFIGURAÇÃO")
     print()
-    print_divider("MODO DE FILTRAGEM")
+    print(f"  {C.GRN}{C.B}INCLUIR:{C.R}")
+    tag_chips(include, C.GRN)
+    print()
+    print(f"  {C.RED}{C.B}EXCLUIR:{C.R}")
+    tag_chips(exclude, C.RED)
+    print()
 
-    if questionary:
-        mode = questionary.select(
-            "Como o bot deve filtrar?",
-            choices=[
-                questionary.Choice("📌 Etiquetas (Recomendado)", value="labels"),
-                questionary.Choice("🔤 Palavras-chave (Legado)", value="keywords"),
-                questionary.Choice("🔀 Híbrido (Labels + Keywords)", value="hybrid"),
-            ],
-            style=CLI_STYLE,
-        ).ask()
+    # Mostrar exemplo prático
+    line("EXEMPLO DE COMO FUNCIONA")
+    print()
+    if include and exclude:
+        print(f"  {C.D}Contato com tag [{C.GRN}{include[0]}{C.D}]")
+        print(f"  → {C.GRN}✓ Será extraído como lead{C.R}")
+        print()
+        print(f"  {C.D}Contato com tag [{C.GRN}{include[0]}{C.D}] + [{C.RED}{exclude[0]}{C.D}]")
+        print(f"  → {C.RED}✗ Bloqueado! A exclusão sempre vence{C.R}")
+    print()
+
+    if ask_yes("Salvar essas configurações?"):
+        config["labels"] = {"include": include, "exclude": exclude}
+        cm.save(config)
+        print()
+        ok("Etiquetas salvas com sucesso!")
     else:
-        print(f"  {C.GREEN}1{C.RESET} 📌 Etiquetas (Recomendado)")
-        print(f"  {C.CYAN}2{C.RESET} 🔤 Palavras-chave (Legado)")
-        print(f"  {C.CYAN}3{C.RESET} 🔀 Híbrido")
-        c = input(f"\n  {C.BOLD}Escolha: {C.RESET}").strip()
-        mode = {"1": "labels", "2": "keywords", "3": "hybrid"}.get(c, "labels")
+        warn("Cancelado — nada foi alterado")
 
-    config["labels"] = {"include": include, "exclude": exclude}
-    if mode:
-        config["filter_mode"] = mode
-
-    cm.save(config)
-    print()
-    print_success("Etiquetas salvas com sucesso!")
-    press_enter()
+    wait_enter()
     return config
 
 
-def configure_business(config: dict, cm: ConfigManager) -> dict:
-    """Tela de configuração dos dados do negócio."""
-    print_banner()
-    print_divider("DADOS DO NEGÓCIO")
+def configure_business(config, cm):
+    """Dados do negócio."""
+    banner()
+    line("DADOS DO NEGÓCIO")
+    print()
+    hint("Essas informações identificam sua conta no sistema.")
     print()
 
-    if questionary:
+    if HAS_QUESTIONARY:
         name = questionary.text(
             "Nome do negócio:",
             default=config.get("business_name", ""),
-            style=CLI_STYLE,
+            style=Q_STYLE,
+            instruction="(ex: Clínica Dra. Rosângela)",
         ).ask()
 
         number = questionary.text(
-            "Seu número WhatsApp (ex: 5521994538190):",
+            "Seu número WhatsApp:",
             default=config.get("own_number", ""),
-            style=CLI_STYLE,
+            style=Q_STYLE,
+            instruction="(formato: 5521994538190 — sem espaços ou traços)",
         ).ask()
 
+        curr_bl = ", ".join(config.get("blacklist_names", []))
         blacklist = questionary.text(
-            "Nomes para ignorar (separados por vírgula):",
-            default=", ".join(config.get("blacklist_names", [])),
-            style=CLI_STYLE,
+            "Nomes para ignorar:",
+            default=curr_bl,
+            style=Q_STYLE,
+            instruction="(separados por vírgula, ex: ana mkt, clinica teste)",
         ).ask()
     else:
         name = input(f"  Nome do negócio [{config.get('business_name', '')}]: ").strip()
@@ -315,177 +360,216 @@ def configure_business(config: dict, cm: ConfigManager) -> dict:
     if number:
         config["own_number"] = number
     if blacklist is not None:
-        config["blacklist_names"] = [
-            n.strip() for n in blacklist.split(",") if n.strip()
-        ]
+        config["blacklist_names"] = [n.strip() for n in blacklist.split(",") if n.strip()]
 
     cm.save(config)
     print()
-    print_success("Dados salvos!")
-    press_enter()
+    ok("Dados salvos!")
+    wait_enter()
     return config
 
 
-def load_preset(config: dict, cm: ConfigManager) -> dict:
-    """Tela de carregamento de preset."""
-    print_banner()
-    print_divider("PRESETS DE NEGÓCIO")
-    print(f"  {C.DIM}Configurações prontas por tipo de negócio{C.RESET}")
+def load_preset(config, cm):
+    """Carregar preset por tipo de negócio."""
+    banner()
+    line("PRESETS DE NEGÓCIO")
+    print()
+    hint("Presets são configurações prontas para cada tipo de negócio.")
+    hint("Eles configuram as etiquetas de inclusão/exclusão automaticamente.")
     print()
 
     presets = cm.list_presets()
     if not presets:
-        print_error("Nenhum preset encontrado em presets/")
-        press_enter()
+        err("Nenhum preset encontrado na pasta presets/")
+        wait_enter()
         return config
 
-    if questionary:
+    friendly = {
+        "clinica_estetica": "🏥 Clínica de Estética",
+        "dentista": "🦷 Consultório Odontológico",
+        "advogado": "⚖️  Escritório de Advocacia",
+        "imobiliaria": "🏠 Imobiliária / Corretor",
+    }
+
+    if HAS_QUESTIONARY:
         choice = questionary.select(
             "Selecione o tipo de negócio:",
             choices=[
-                questionary.Choice(p.replace("_", " ").title(), value=p)
+                questionary.Choice(friendly.get(p, p.replace("_", " ").title()), value=p)
                 for p in presets
             ],
-            style=CLI_STYLE,
+            style=Q_STYLE,
+            instruction="  ↑↓ navegar  ·  Enter selecionar",
         ).ask()
     else:
         for i, p in enumerate(presets, 1):
-            print(f"  {C.CYAN}{i}{C.RESET} {p.replace('_', ' ').title()}")
-        c = input(f"\n  {C.BOLD}Escolha: {C.RESET}").strip()
+            label = friendly.get(p, p.replace("_", " ").title())
+            print(f"   {C.CYN}{C.B}{i}{C.R}  {label}")
+        print()
+        c = input(f"  {C.B}›{C.R} ").strip()
         try:
             choice = presets[int(c) - 1]
         except (ValueError, IndexError):
-            print_error("Opção inválida")
-            press_enter()
+            err("Opção inválida")
+            wait_enter()
             return config
 
     if choice:
         try:
             preset = cm.load_preset(choice)
-            cm.save(preset)
-            print()
-            print_success(f"Preset '{choice.replace('_', ' ').title()}' carregado!")
-            press_enter()
-            return preset
-        except FileNotFoundError as e:
-            print_error(str(e))
-            press_enter()
 
+            # Mostrar o que será configurado
+            print()
+            line(f"PRESET: {friendly.get(choice, choice).upper()}")
+            print()
+            inc = preset.get("labels", {}).get("include", [])
+            exc = preset.get("labels", {}).get("exclude", [])
+            print(f"  {C.GRN}{C.B}Incluir:{C.R}")
+            tag_chips(inc, C.GRN)
+            print(f"  {C.RED}{C.B}Excluir:{C.R}")
+            tag_chips(exc, C.RED)
+            print()
+
+            if ask_yes("Aplicar essas configurações?"):
+                cm.save(preset)
+                ok(f"Preset aplicado!")
+                wait_enter()
+                return preset
+        except FileNotFoundError as e:
+            err(str(e))
+
+    wait_enter()
     return config
 
 
-def start_extraction(config: dict, cm: ConfigManager):
-    """Inicia a extração com feedback visual."""
-    print_banner()
-    print_divider("PRÉ-VÔOO")
+def start_extraction(config, cm):
+    """Iniciar a extração."""
+    banner()
+    line("PRÉ-VERIFICAÇÃO")
     print()
 
     # Validar
     errors = cm.validate(config)
-    if errors:
-        print_warning("Problemas encontrados:")
-        for err in errors:
-            print(f"  {C.RED}  • {err}{C.RESET}")
+    has_errors = bool(errors)
+
+    if has_errors:
+        warn("Problemas encontrados:")
+        for e in errors:
+            print(f"    {C.RED}• {e}{C.R}")
         print()
-        if not confirm_action("Continuar mesmo assim?"):
+        if not ask_yes("Continuar mesmo assim?"):
             return
     else:
-        print_success("Configuração válida")
+        ok("Configuração válida")
 
+    # Resumo antes de iniciar
     print()
-    show_config_summary(config)
+    show_resume(config)
 
-    if not confirm_action("Iniciar extração agora?"):
+    if not ask_yes("Iniciar extração agora?"):
         return
 
-    print()
-    print(f"  {C.CYAN}{'═' * 50}{C.RESET}")
-    print(f"  {C.BOLD}{C.GREEN}  🚀 EXTRAINDO LEADS...{C.RESET}")
-    print(f"  {C.DIM}  Pressione Ctrl+C para interromper com segurança{C.RESET}")
-    print(f"  {C.CYAN}{'═' * 50}{C.RESET}")
-    print()
+    # GO!
+    banner()
+    print(f"""
+  {C.CYN}{'═' * 52}{C.R}
+
+      {C.GRN}{C.B}🚀  EXTRAÇÃO EM ANDAMENTO...{C.R}
+
+      {C.D}Os leads estão sendo capturados.
+      O Chrome vai abrir automaticamente.
+
+      Pressione {C.YLW}Ctrl+C{C.D} para parar com segurança.{C.R}
+
+  {C.CYN}{'═' * 52}{C.R}
+""")
 
     try:
         from core.facade import PegadorDeContato
         pegador = PegadorDeContato()
         pegador.start()
     except KeyboardInterrupt:
-        print(f"\n  {C.YELLOW}⏹ Interrompido pelo usuário. Progresso salvo.{C.RESET}")
+        print(f"\n  {C.YLW}⏹ Interrompido pelo usuário. Progresso salvo.{C.R}")
     except Exception as e:
-        print_error(f"Erro: {e}")
+        err(f"Erro: {e}")
     finally:
         if 'pegador' in dir() and pegador:
             pegador.cleanup()
 
-    press_enter()
+    wait_enter()
 
 
 def clear_progress():
-    """Limpa dados de progresso."""
-    from infra.exporters import CSVExporter
-    exporter = CSVExporter()
-
-    if confirm_action("Apagar todo o progresso e leads salvos?"):
-        exporter.limpar_dados()
+    """Limpar progresso."""
+    if ask_yes("Apagar todo o progresso e leads salvos?"):
+        from infra.exporters import CSVExporter
+        CSVExporter().limpar_dados()
         print()
-        print_success("Progresso limpo! Pronto para nova extração.")
+        ok("Progresso limpo! Pronto pra nova extração.")
     else:
-        print_info("Cancelado.")
+        info("Cancelado.")
+    wait_enter()
 
-    press_enter()
 
+# ═════════════════════════════════════════════════════════════════════
+# FALLBACK SEM QUESTIONARY
+# ═════════════════════════════════════════════════════════════════════
 
-def _manual_checkbox(title: str, options: list, current: list) -> list:
-    """Fallback para checkbox sem questionary."""
-    print(f"\n  {C.DIM}Tags disponíveis para {title}:{C.RESET}")
+def _fallback_checkbox(title, options, current, color):
+    """Checkbox manual para terminais sem questionary."""
     for i, opt in enumerate(options, 1):
-        mark = f"{C.GREEN}x{C.RESET}" if opt in current else " "
-        print(f"  [{mark}] {C.CYAN}{i:2d}{C.RESET} {opt}")
+        is_sel = opt in current
+        mark = f"{C.GRN}✓{C.R}" if is_sel else f"{C.D}·{C.R}"
+        print(f"   {mark}  {color}{C.B}{i:2d}{C.R}  {opt}")
     print()
-    nums = input(f"  {C.BOLD}Números para selecionar (ex: 1,3,7): {C.RESET}").strip()
+    hint("Digite os números separados por vírgula (ex: 1,3,5)")
+    hint("Ou Enter para manter a seleção atual")
+    nums = input(f"\n  {C.B}›{C.R} ").strip()
     if not nums:
         return current
     try:
         indices = [int(n.strip()) - 1 for n in nums.split(",")]
         return [options[i] for i in indices if 0 <= i < len(options)]
     except (ValueError, IndexError):
+        warn("Entrada inválida, mantendo seleção anterior")
         return current
 
 
-# =====================================================================
+# ═════════════════════════════════════════════════════════════════════
 # LOOP PRINCIPAL
-# =====================================================================
+# ═════════════════════════════════════════════════════════════════════
 
 def run_cli():
-    """Executa o menu principal do CLI."""
-    if questionary is None:
-        print(f"\n  {C.YELLOW}⚠ questionary não instalado — usando modo manual{C.RESET}")
-        print(f"  {C.DIM}Para menus interativos: venv/bin/pip install questionary{C.RESET}\n")
+    """Ponto de entrada do CLI."""
+    if not HAS_QUESTIONARY:
+        print(f"\n  {C.YLW}⚠ Modo simplificado (questionary não instalado){C.R}")
+        print(f"  {C.D}Para menus interativos: venv/bin/pip install questionary{C.R}\n")
+        time.sleep(1)
 
-    config_manager = ConfigManager()
-    config = config_manager.load()
+    cm = ConfigManager()
+    config = cm.load()
 
     while True:
-        print_banner()
-        show_config_summary(config)
-        action = show_main_menu()
+        banner()
+        show_resume(config)
+        action = main_menu()
 
-        if action == "exit":
-            print(f"\n  {C.CYAN}👋 Até a próxima!{C.RESET}\n")
+        if action == "exit" or action is None:
+            print(f"\n  {C.CYN}👋 Até a próxima!{C.R}\n")
             break
         elif action == "start":
-            start_extraction(config, config_manager)
+            start_extraction(config, cm)
         elif action == "labels":
-            config = configure_labels(config, config_manager)
+            config = configure_labels(config, cm)
         elif action == "business":
-            config = configure_business(config, config_manager)
+            config = configure_business(config, cm)
         elif action == "preset":
-            config = load_preset(config, config_manager)
+            config = load_preset(config, cm)
         elif action == "clear":
             clear_progress()
         else:
-            print_error("Opção inválida")
-            press_enter()
+            err("Opção inválida")
+            wait_enter()
 
 
 if __name__ == "__main__":

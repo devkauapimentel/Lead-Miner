@@ -173,14 +173,14 @@ class PegadorApp(ctk.CTk):
 
         row_biz = ctk.CTkFrame(scroll, fg_color="transparent")
         row_biz.pack(fill="x", pady=2)
-        ctk.CTkLabel(row_biz, text="Nome:", width=120, anchor="e").pack(
+        ctk.CTkLabel(row_biz, text="Nome:").pack(
             side="left", padx=(0, 8))
         self.entry_business = ctk.CTkEntry(row_biz, placeholder_text="Ex: Clínica Dra. Rosa")
         self.entry_business.pack(side="left", fill="x", expand=True)
 
         row_num = ctk.CTkFrame(scroll, fg_color="transparent")
         row_num.pack(fill="x", pady=2)
-        ctk.CTkLabel(row_num, text="Meu Número:", width=120, anchor="e").pack(
+        ctk.CTkLabel(row_num, text="Meu Número:").pack(
             side="left", padx=(0, 8))
         self.entry_number = ctk.CTkEntry(row_num, placeholder_text="5521994538190")
         self.entry_number.pack(side="left", fill="x", expand=True)
@@ -192,7 +192,7 @@ class PegadorApp(ctk.CTk):
 
         row_chrome_bin = ctk.CTkFrame(scroll, fg_color="transparent")
         row_chrome_bin.pack(fill="x", pady=2)
-        ctk.CTkLabel(row_chrome_bin, text="Binário:", width=120, anchor="e").pack(
+        ctk.CTkLabel(row_chrome_bin, text="Binário:").pack(
             side="left", padx=(0, 8))
         self.entry_chrome_bin = ctk.CTkEntry(
             row_chrome_bin, placeholder_text="auto (detecta automaticamente)")
@@ -200,7 +200,7 @@ class PegadorApp(ctk.CTk):
 
         row_chrome_profile = ctk.CTkFrame(scroll, fg_color="transparent")
         row_chrome_profile.pack(fill="x", pady=2)
-        ctk.CTkLabel(row_chrome_profile, text="Perfil:", width=120, anchor="e").pack(
+        ctk.CTkLabel(row_chrome_profile, text="Perfil:").pack(
             side="left", padx=(0, 8))
         self.entry_chrome_profile = ctk.CTkEntry(
             row_chrome_profile, placeholder_text="~/.config/google-chrome")
@@ -339,11 +339,11 @@ class PegadorApp(ctk.CTk):
         self.btn_stop = ctk.CTkButton(
             btn_frame, text="⏹  PARAR",
             font=ctk.CTkFont(size=15, weight="bold"),
-            height=45, fg_color="#c0392b", hover_color="#96281b",
+            height=45, width=140, fg_color="#c0392b", hover_color="#96281b",
             command=self._stop_extraction,
             state="disabled",
         )
-        self.btn_stop.pack(side="left", width=140)
+        self.btn_stop.pack(side="left")
 
         # --- Stats ---
         stats_frame = ctk.CTkFrame(tab)
