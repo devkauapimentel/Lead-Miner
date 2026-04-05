@@ -299,7 +299,9 @@ class ScraperEngine:
         e aplica as regras de inclusão/exclusão.
         """
         self._clicar_conversa(conv)
+        if not self.running: return
         self._sleep_load()
+        if not self.running: return
 
         try:
             WebDriverWait(self.driver, 4).until(
@@ -358,6 +360,7 @@ class ScraperEngine:
             Lista de nomes das etiquetas encontradas
         """
         try:
+            if not self.running: return []
             main = self.driver.find_element(By.ID, "main")
             header = main.find_element(By.TAG_NAME, "header")
 
@@ -494,7 +497,9 @@ class ScraperEngine:
         Lógica preservada do whatsapp_lead_scraper_legacy.py
         """
         self._clicar_conversa(conv)
+        if not self.running: return
         self._sleep_load()
+        if not self.running: return
 
         try:
             WebDriverWait(self.driver, 4).until(
@@ -607,10 +612,12 @@ class ScraperEngine:
 
     def _clicar_conversa(self, conv) -> None:
         """Rola até a conversa e clica nela."""
+        if not self.running: return
         self.driver.execute_script(
             "arguments[0].scrollIntoView({block:'center'});", conv
         )
         self._sleep_min()
+        if not self.running: return
         try:
             conv.click()
         except Exception:

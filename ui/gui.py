@@ -184,10 +184,10 @@ class PegadorApp(ctk.CTk):
             side="left", padx=(0, 8))
             
         self.number_var = ctk.StringVar()
-        self.number_var.trace_add("write", self._format_phone)
         
         self.entry_number = ctk.CTkEntry(row_num, placeholder_text="+55 (21) 99453-8190", textvariable=self.number_var)
         self.entry_number.pack(side="left", fill="x", expand=True)
+        self.entry_number.bind("<FocusOut>", self._format_phone)
 
         # --- Chrome ---
         ctk.CTkLabel(scroll, text="🌐 Conexão do WhatsApp",
@@ -197,8 +197,8 @@ class PegadorApp(ctk.CTk):
         self.chrome_mode_var = ctk.StringVar(value="profile")
         row_mode_chrome = ctk.CTkFrame(scroll, fg_color="transparent")
         row_mode_chrome.pack(fill="x", pady=(2, 10))
-        ctk.CTkRadioButton(row_mode_chrome, text="🎯 Usar novo Chrome (Perfil Clonado)", variable=self.chrome_mode_var, value="profile").pack(side="left", padx=(10, 20))
-        ctk.CTkRadioButton(row_mode_chrome, text="🔗 Usar Chrome Aberto (Já logado)", variable=self.chrome_mode_var, value="remote").pack(side="left")
+        ctk.CTkRadioButton(row_mode_chrome, text="🎯 Usar Perfil Clonado (Não precisa ler QR code)", variable=self.chrome_mode_var, value="profile").pack(side="left", padx=(10, 20))
+        ctk.CTkRadioButton(row_mode_chrome, text="🔗 Usar Chrome Modo Debug", variable=self.chrome_mode_var, value="remote").pack(side="left")
 
         row_chrome_bin = ctk.CTkFrame(scroll, fg_color="transparent")
         row_chrome_bin.pack(fill="x", pady=2)
@@ -308,19 +308,15 @@ class PegadorApp(ctk.CTk):
                       font=ctk.CTkFont(size=14, weight="bold")).pack(
             anchor="w", pady=(15, 5))
 
-        row_preset = ctk.CTkFrame(scroll, fg_color="transparent")
-        row_preset.pack(fill="x", pady=2, padx=15)
-
         presets = self.config_manager.list_presets()
-        preset_names = presets if presets else ["(nenhum preset encontrado)"]
-        self.preset_dropdown = ctk.CTkOptionMenu(
-            row_preset, values=preset_names, width=200)
-        self.preset_dropdown.pack(side="left", padx=(0, 10))
-
-        ctk.CTkButton(
-            row_preset, text="📥 Carregar Preset",
-            command=self._load_preset, width=140,
-        ).pack(side="left")
+        preset_names = presets if presets else ["nenhum"]
+        
+        self.preset_var = ctk.StringVar(value="")
+        self.preset_selector = ctk.CTkSegmentedButton(
+            scroll, values=preset_names, variable=self.preset_var,
+            command=self._load_preset_by_name
+        )
+        self.preset_selector.pack(fill="x", padx=15, pady=5)
 
         # --- Botão Salvar ---
         ctk.CTkButton(
@@ -497,18 +493,20 @@ class PegadorApp(ctk.CTk):
         self.entry_blacklist.delete(0, "end")
         self.entry_blacklist.insert(0, ", ".join(blacklist))
 
-    def _load_preset(self):
-        """Carrega um preset selecionado."""
-        preset_name = self.preset_dropdown.get()
-        if preset_name.startswith("("):
-            return
-        try:
-            preset = self.config_manager.load_preset(preset_name)
-            self.config = preset
-            self._load_config_to_ui()
-            self.add_log(f"📦 Preset '{preset_name}' carregado!")
-        except FileNotFoundError as e:
-            self.add_log(f"❌ {e}")
+    def _load_preset_by_name(self, value):
+        """Carrega e aplica o preset clicado pelo botão."""
+        if value and value != "nenhum":
+            try:
+                preset_data = self.config_manager.load_preset(value)
+                # Merge into current config
+                self.config.update(preset_data)
+                self._load_config_to_ui()
+                self.add_log(f"📥 Preset '{value}' carregado com sucesso!")
+                
+                # Reseta a seleção do botão
+                self.preset_var.set("")
+            except FileNotFoundError as e:
+                self.add_log(f"❌ {e}")
 
     def _add_custom_include(self):
         """Adiciona etiqueta personalizada na lista de inclusão."""
@@ -653,8 +651,8 @@ class PegadorApp(ctk.CTk):
             self.timer_job = self.after(1000, self._update_timer)
 
 
-    def _format_phone(self, *args):
-        """Formata automaticamente o número no entry: +55 (21) 99999-9999"""
+    def _format_phone(self, event=None):
+        """Formata automaticamente o número no entry ao sair do campo (FocusOut)."""
         raw = self.number_var.get()
         import re
         digits = re.sub(r'\D', '', raw)
