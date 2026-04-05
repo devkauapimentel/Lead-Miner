@@ -443,7 +443,7 @@ class PegadorApp(ctk.CTk):
             "own_number": raw_number,
             "chrome": {
                 "mode": self.chrome_mode_var.get(),
-                "profile_path": chrome_profile,
+                "profile_path": self.entry_chrome_profile.get().strip() or "~/.config/google-chrome/Default",
                 "binary": chrome_bin,
             },
             "labels": {
