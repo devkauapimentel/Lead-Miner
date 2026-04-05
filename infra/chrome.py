@@ -119,10 +119,19 @@ class ChromeManager:
             options.add_argument(f"--user-data-dir={user_data_dir}")
             options.add_argument(f"--profile-directory={profile_dir}")
             # Importante: SEM --no-sandbox e SEM --password-store para garantir acesso ao GNOME Keyring
-        else:
-            log.info("[*] Modo ISOLADO: Usando ou criando perfil do robô vazio...")
+        elif self.mode == "isolated":
+            log.info("[*] Modo ISOLADO: Usando perfil do robô clonado seguro...")
             self.copiar_perfil()
             options.add_argument(f"--user-data-dir={self.robo_profile}")
+            options.add_argument("--profile-directory=Default")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--no-sandbox")
+        else: # self.mode == "clean"
+            log.info("[*] Modo CLEAN: Criando um perfil absolutamente vazio do zero (QR Code)...")
+            base_dir = os.path.dirname(self.robo_profile)
+            clean_profile = os.path.join(base_dir, "chrome_profile_clean")
+            os.makedirs(clean_profile, exist_ok=True)
+            options.add_argument(f"--user-data-dir={clean_profile}")
             options.add_argument("--profile-directory=Default")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--no-sandbox")

@@ -199,8 +199,9 @@ class PegadorApp(ctk.CTk):
         radio_frame = ctk.CTkFrame(scroll, fg_color="transparent")
         radio_frame.pack(fill="x", pady=(2, 10))
         
-        ctk.CTkRadioButton(radio_frame, text="💻 Chrome Real (Login Nativo. Feche seu navegador original)", variable=self.chrome_mode_var, value="real").pack(anchor="w", pady=5)
-        ctk.CTkRadioButton(radio_frame, text="🤖 Robô Isolado (Independente. Requer ler QR Code)", variable=self.chrome_mode_var, value="isolated").pack(anchor="w", pady=5)
+        ctk.CTkRadioButton(radio_frame, text="💻 Chrome Nativo (Login Direto. Feche seu navegador antes de rodar)", variable=self.chrome_mode_var, value="real").pack(anchor="w", pady=5)
+        ctk.CTkRadioButton(radio_frame, text="🛡️ Chrome Clonado Seguro (Copia a sessão atual em background)", variable=self.chrome_mode_var, value="isolated").pack(anchor="w", pady=5)
+        ctk.CTkRadioButton(radio_frame, text="📱 Chrome Zerado (Abre vazio para ler um NOVO QR Code do 0)", variable=self.chrome_mode_var, value="clean").pack(anchor="w", pady=5)
 
         row_chrome_bin = ctk.CTkFrame(scroll, fg_color="transparent")
         row_chrome_bin.pack(fill="x", pady=2)
