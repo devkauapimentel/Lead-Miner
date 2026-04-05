@@ -17,8 +17,10 @@ import logging
 try:
     import customtkinter as ctk
 except ImportError:
-    print("❌ customtkinter não instalado. Rode: pip install customtkinter")
-    sys.exit(1)
+    raise ImportError(
+        "customtkinter não instalado ou tkinter do sistema ausente. "
+        "Rode: sudo apt install python3-tk && venv/bin/pip install customtkinter"
+    )
 
 # Adicionar raiz do projeto ao path
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

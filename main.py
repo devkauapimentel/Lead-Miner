@@ -1,8 +1,10 @@
 """
 main.py — Ponto de Entrada do Pegador de Contato v2.0
 ======================================================
-python main.py        → Abre a GUI (padrão)
-python main.py --cli  → Abre o menu interativo no terminal
+Uso:
+    python main.py            → Abre a GUI (interface visual)
+    python main.py --cli      → Abre o menu interativo no terminal
+    python main.py --help     → Mostra ajuda
 """
 
 import sys
@@ -13,41 +15,78 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from infra.logger import setup_logger
+
+def show_help():
+    """Exibe ajuda de uso."""
+    print("""
+  ⚡ Pegador de Contato v2.0
+  ─────────────────────────────
+
+  Uso:
+    python main.py            Abre a interface visual (GUI)
+    python main.py --cli      Abre o menu interativo no terminal
+    python main.py --help     Mostra esta ajuda
+
+  Exemplos:
+    venv/bin/python main.py --cli
+    venv/bin/python main.py
+""")
 
 
 def main():
     """
     Ponto de entrada principal.
-    Decide se abre a GUI ou o CLI com base nos argumentos.
+    Abre EXCLUSIVAMENTE o modo escolhido — nunca ambos.
     """
-    setup_logger()
+    # Parse de argumentos
+    args = sys.argv[1:]
 
-    # Verificar argumentos
-    use_cli = "--cli" in sys.argv or "-c" in sys.argv
+    if "--help" in args or "-h" in args:
+        show_help()
+        return
+
+    use_cli = "--cli" in args or "-c" in args
 
     if use_cli:
-        # Modo terminal interativo
+        # ======================
+        # MODO CLI (Terminal)
+        # ======================
+        from infra.logger import setup_logger
+        setup_logger()
         from ui.cli import run_cli
         run_cli()
     else:
-        # Modo GUI (padrão)
+        # ======================
+        # MODO GUI (Visual)
+        # ======================
         try:
+            from infra.logger import setup_logger
+            setup_logger()
             from ui.gui import run_gui
             run_gui()
         except ImportError as e:
-            print(f"⚠️ Não foi possível abrir a GUI: {e}")
-            print("   Instalando customtkinter...")
-            os.system(f"{sys.executable} -m pip install customtkinter")
-            print("\n   Tente novamente: python main.py")
-            print("   Ou use o modo terminal: python main.py --cli")
+            print(f"""
+  ❌ Não foi possível abrir a interface visual.
+  
+  Motivo: {e}
+
+  Soluções:
+    1. Instale o tkinter:  sudo apt install python3-tk
+    2. Recrie o venv:      rm -rf venv && python3 -m venv venv
+    3. Instale deps:       venv/bin/pip install -r requirements.txt
+
+  Ou use o modo terminal:
+    venv/bin/python main.py --cli
+""")
             sys.exit(1)
         except Exception as e:
-            # Fallback para CLI se GUI falhar (ex: sem display)
-            print(f"⚠️ GUI falhou: {e}")
-            print("   Iniciando modo terminal...")
-            from ui.cli import run_cli
-            run_cli()
+            print(f"""
+  ❌ Erro inesperado ao abrir a GUI: {e}
+
+  Use o modo terminal:
+    venv/bin/python main.py --cli
+""")
+            sys.exit(1)
 
 
 if __name__ == "__main__":
