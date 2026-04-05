@@ -13,6 +13,13 @@ import sys
 import threading
 import time
 import logging
+import re
+
+# === Temas Premium (Lead Miner) ===
+COLOR_EMERALD = "#1DB954"  # Verde Esmeralda Vibrante
+COLOR_GOLD = "#FFD700"     # Ouro
+COLOR_BG_DARK = "#121212"  # Fundo extra escuro
+
 
 try:
     import customtkinter as ctk
@@ -115,7 +122,8 @@ class LeadMinerApp(ctk.CTk):
 
         # Aparência
         ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("blue")
+        # ctk.set_default_color_theme("blue") # Substituído por customização manual
+
 
         # Estado
         self.pegador = None
@@ -138,8 +146,10 @@ class LeadMinerApp(ctk.CTk):
         ctk.CTkLabel(
             header,
             text="⛏️ Lead Miner",
-            font=ctk.CTkFont(size=24, weight="bold"),
+            font=ctk.CTkFont(size=26, weight="bold"),
+            text_color=COLOR_EMERALD
         ).pack(side="left")
+
 
         ctk.CTkLabel(
             header,
@@ -149,7 +159,13 @@ class LeadMinerApp(ctk.CTk):
         ).pack(side="left", padx=(8, 0), pady=(8, 0))
 
         # === Tabs ===
-        self.tabview = ctk.CTkTabview(self, segmented_button_selected_color="#1f6aa5")
+        self.tabview = ctk.CTkTabview(
+            self, 
+            segmented_button_selected_color=COLOR_EMERALD,
+            segmented_button_selected_hover_color="#189e47",
+            segmented_button_unselected_hover_color="#333333"
+        )
+
         self.tabview.pack(fill="both", expand=True, padx=20, pady=10)
 
         self.tab_config = self.tabview.add("⚙️ Configuração")
@@ -306,6 +322,40 @@ class LeadMinerApp(ctk.CTk):
             scroll, placeholder_text="nome1, nome2, nome3 (separados por vírgula)")
         self.entry_blacklist.pack(fill="x", padx=15, pady=2)
 
+        # --- Lead Automático ---
+        ctk.CTkLabel(scroll, text="🤖 Lead Automático (Nomes)",
+                      font=ctk.CTkFont(size=14, weight="bold")).pack(
+            anchor="w", pady=(15, 5))
+        ctk.CTkLabel(scroll, text="Contatos com estes nomes serão tratados como lead independente de etiquetas",
+                      text_color="gray", font=ctk.CTkFont(size=11)).pack(anchor="w")
+
+        self.entry_auto_names = ctk.CTkEntry(
+            scroll, placeholder_text="anúncio, ads, lead (separados por vírgula)")
+        self.entry_auto_names.pack(fill="x", padx=15, pady=2)
+
+        # --- Limites e Performance ---
+        ctk.CTkLabel(scroll, text="⚡ Limites e Performance",
+                      font=ctk.CTkFont(size=14, weight="bold")).pack(
+            anchor="w", pady=(15, 5))
+
+        row_limits = ctk.CTkFrame(scroll, fg_color="transparent")
+        row_limits.pack(fill="x", pady=2)
+        
+        # Max Contacts
+        frame_max = ctk.CTkFrame(row_limits, fg_color="transparent")
+        frame_max.pack(side="left", fill="x", expand=True, padx=(5, 10))
+        ctk.CTkLabel(frame_max, text="Máx. Contatos (0 = ilimitado):", font=ctk.CTkFont(size=12)).pack(anchor="w")
+        self.entry_max_contacts = ctk.CTkEntry(frame_max, placeholder_text="Ex: 50")
+        self.entry_max_contacts.pack(fill="x")
+
+        # Internal Scrolls
+        frame_scrolls = ctk.CTkFrame(row_limits, fg_color="transparent")
+        frame_scrolls.pack(side="left", fill="x", expand=True, padx=(10, 5))
+        ctk.CTkLabel(frame_scrolls, text="Deep Scroll (mensagens):", font=ctk.CTkFont(size=12)).pack(anchor="w")
+        self.entry_scrolls = ctk.CTkEntry(frame_scrolls, placeholder_text="Padrão: 20")
+        self.entry_scrolls.pack(fill="x")
+
+
         # --- Presets ---
         ctk.CTkLabel(scroll, text="📦 Presets por Tipo de Negócio",
                       font=ctk.CTkFont(size=14, weight="bold")).pack(
@@ -326,8 +376,11 @@ class LeadMinerApp(ctk.CTk):
             scroll, text="💾  Salvar Configuração",
             font=ctk.CTkFont(size=14, weight="bold"),
             height=42,
+            fg_color=COLOR_EMERALD,
+            hover_color="#189e47",
             command=self._save_config,
         ).pack(fill="x", padx=15, pady=(20, 10))
+
 
     def _build_run_tab(self):
         """Aba de Execução."""
@@ -340,10 +393,11 @@ class LeadMinerApp(ctk.CTk):
         self.btn_start = ctk.CTkButton(
             btn_frame, text="⛏️  INICIAR MINERAÇÃO",
             font=ctk.CTkFont(size=15, weight="bold"),
-            height=45, fg_color="#1a8f3c", hover_color="#15722f",
+            height=45, fg_color=COLOR_EMERALD, hover_color="#189e47",
             command=self._start_extraction,
         )
         self.btn_start.pack(side="left", fill="x", expand=True, padx=(0, 5))
+
 
         self.btn_stop = ctk.CTkButton(
             btn_frame, text="⏹  PARAR",
@@ -369,9 +423,10 @@ class LeadMinerApp(ctk.CTk):
         stats_grid.columnconfigure((0, 1, 2, 3), weight=1)
 
         # Progress bar
-        self.progress = ctk.CTkProgressBar(tab)
+        self.progress = ctk.CTkProgressBar(tab, progress_color=COLOR_EMERALD)
         self.progress.pack(fill="x", padx=10, pady=5)
         self.progress.set(0)
+
 
         # --- Log ---
         ctk.CTkLabel(tab, text="📝 Log em Tempo Real",
@@ -402,10 +457,10 @@ class LeadMinerApp(ctk.CTk):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.grid(row=0, column=col, padx=5, sticky="ew")
 
-        ctk.CTkLabel(frame, text=title, text_color="gray",
-                      font=ctk.CTkFont(size=11)).pack()
-        lbl = ctk.CTkLabel(frame, text=value,
-                            font=ctk.CTkFont(size=20, weight="bold"))
+        ctk.CTkLabel(frame, text=title.upper(), text_color=COLOR_EMERALD,
+                      font=ctk.CTkFont(size=10, weight="bold")).pack()
+        lbl = ctk.CTkLabel(frame, text=value, text_color=COLOR_GOLD,
+                            font=ctk.CTkFont(size=22, weight="bold"))
         lbl.pack()
         return lbl
 
@@ -439,6 +494,19 @@ class LeadMinerApp(ctk.CTk):
         import re
         raw_number = re.sub(r'\D', '', self.entry_number.get())
 
+        auto_names_text = self.entry_auto_names.get().strip()
+        auto_names = [n.strip() for n in auto_names_text.split(",")] if auto_names_text else []
+
+        try:
+            max_c = int(self.entry_max_contacts.get() or 0)
+        except ValueError:
+            max_c = 0
+
+        try:
+            scr = int(self.entry_scrolls.get() or 20)
+        except ValueError:
+            scr = 20
+
         return {
             "business_name": self.entry_business.get().strip() or "Meu Negócio",
             "own_number": raw_number,
@@ -453,10 +521,14 @@ class LeadMinerApp(ctk.CTk):
             },
             "filter_mode": self.filter_mode_var.get(),
             "keywords": self.config.get("keywords", {}),
-            "auto_lead_names": self.config.get("auto_lead_names", []),
+            "auto_lead_names": auto_names,
             "blacklist_names": blacklist,
-            "scraper": self.config.get("scraper", {}),
+            "scraper": {
+                "max_contacts": max_c if max_c > 0 else None,
+                "internal_scrolls": scr
+            },
         }
+
 
     def _load_config_to_ui(self):
         """Carrega a configuração atual nos campos da GUI."""
@@ -493,6 +565,19 @@ class LeadMinerApp(ctk.CTk):
         blacklist = c.get("blacklist_names", [])
         self.entry_blacklist.delete(0, "end")
         self.entry_blacklist.insert(0, ", ".join(blacklist))
+
+        auto_names = c.get("auto_lead_names", [])
+        self.entry_auto_names.delete(0, "end")
+        self.entry_auto_names.insert(0, ", ".join(auto_names))
+
+        scr_cfg = c.get("scraper", {})
+        self.entry_max_contacts.delete(0, "end")
+        m_c = scr_cfg.get("max_contacts")
+        if m_c: self.entry_max_contacts.insert(0, str(m_c))
+
+        self.entry_scrolls.delete(0, "end")
+        self.entry_scrolls.insert(0, str(scr_cfg.get("internal_scrolls", 20)))
+
 
     def _load_preset_by_name(self, value):
         """Carrega e aplica o preset clicado pelo botão."""
