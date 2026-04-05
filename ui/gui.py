@@ -498,6 +498,10 @@ class PegadorApp(ctk.CTk):
         if value and value != "nenhum":
             try:
                 preset_data = self.config_manager.load_preset(value)
+                # Remover dados específicos do usuário para não sobescrever
+                preset_data.pop("own_number", None)
+                preset_data.pop("chrome", None)
+                
                 # Merge into current config
                 self.config.update(preset_data)
                 self._load_config_to_ui()
