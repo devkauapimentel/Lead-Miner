@@ -204,7 +204,7 @@ class ChromeManager:
             ignore=shutil.ignore_patterns(
                 'SingletonLock', 'SingletonSocket', 'SingletonCookie',
                 'lockfile', 'LOCK', 'Cache', 'Code Cache', 'GPUCache',
-                'Service Worker', 'DawnCache', 'GrShaderCache'
+                'DawnCache', 'GrShaderCache'
             ),
             dirs_exist_ok=True
         )
