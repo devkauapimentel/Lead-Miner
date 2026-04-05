@@ -210,10 +210,10 @@ class PegadorApp(ctk.CTk):
 
         row_chrome_profile = ctk.CTkFrame(scroll, fg_color="transparent")
         row_chrome_profile.pack(fill="x", pady=2)
-        ctk.CTkLabel(row_chrome_profile, text="Perfil:").pack(
+        ctk.CTkLabel(row_chrome_profile, text="Caminho do Perfil\n(veja chrome://version):", justify="left").pack(
             side="left", padx=(0, 8))
         self.entry_chrome_profile = ctk.CTkEntry(
-            row_chrome_profile, placeholder_text="~/.config/google-chrome")
+            row_chrome_profile, placeholder_text="Ex: ~/.config/google-chrome/Profile 1")
         self.entry_chrome_profile.pack(side="left", fill="x", expand=True)
 
         # --- Modo de Filtro ---

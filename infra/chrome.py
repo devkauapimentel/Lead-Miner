@@ -57,8 +57,8 @@ class ChromeManager:
         chrome_cfg = config.get("chrome", {})
         self.mode = chrome_cfg.get("mode", "profile")
         self.debug_port = chrome_cfg.get("debug_port", 9222)
-        self.profile_path = os.path.expanduser(
-            chrome_cfg.get("profile_path", "~/.config/google-chrome")
+        self.exact_profile_path = os.path.expanduser(
+            chrome_cfg.get("profile_path", "~/.config/google-chrome/Default")
         )
         self.binary = chrome_cfg.get("binary", "auto")
         self.robo_profile = os.path.join(base_dir, "chrome_profile_robo")
@@ -138,18 +138,22 @@ class ChromeManager:
             "Instale o Google Chrome ou configure o caminho manualmente em config.json"
         )
 
-    def detectar_perfil(self) -> str:
-        if os.path.exists(self.profile_path):
-            return self.profile_path
+    def detectar_perfil_exato(self) -> str:
+        if os.path.exists(self.exact_profile_path):
+            return self.exact_profile_path
 
-        for path in PROFILE_PATHS:
-            if os.path.exists(path):
-                log.info(f"Perfil detectado: {path}")
-                return path
+        # Tentar fallbacks comuns
+        for base_path in PROFILE_PATHS:
+            for sub_profile in ["Default", "Profile 1", "Profile 2", "Profile 3"]:
+                chute = os.path.join(base_path, sub_profile)
+                if os.path.exists(chute):
+                    log.info(f"Perfil detectado automaticamente: {chute}")
+                    return chute
 
         raise FileNotFoundError(
-            "Perfil do Chrome não encontrado. "
-            "Abra o Chrome manualmente uma vez para criar o perfil."
+            "Caminho exato do perfil do Chrome não encontrado. "
+            "Abra o Chrome no perfil correto, acesse chrome://version, "
+            "copie o 'Caminho de perfil' e cole na área de Configuração da Interface."
         )
 
     def copiar_perfil(self) -> None:
@@ -168,14 +172,13 @@ class ChromeManager:
                         pass
             return
 
-        perfil_origem = self.detectar_perfil()
-        pasta_origem = os.path.join(perfil_origem, "Default")
+        pasta_origem = self.detectar_perfil_exato()
         pasta_destino = os.path.join(self.robo_profile, "Default")
 
         if not os.path.exists(pasta_origem):
             raise FileNotFoundError(
-                f"Pasta 'Default' não encontrada em {perfil_origem}. "
-                "Abra o Chrome e faça login no WhatsApp Web primeiro."
+                f"Pasta do perfil não encontrada em {pasta_origem}. "
+                "Verifique o Caminho de Perfil preenchido nas Configurações."
             )
 
         log.info("[*] Copiando perfil do Chrome...")
@@ -192,7 +195,9 @@ class ChromeManager:
             dirs_exist_ok=True
         )
 
-        local_state = os.path.join(perfil_origem, "Local State")
+        # Copiar Local State que fica uma pasta acima do perfil (no base_dir)
+        base_dir = os.path.dirname(pasta_origem)
+        local_state = os.path.join(base_dir, "Local State")
         if os.path.exists(local_state):
             shutil.copy2(local_state, os.path.join(self.robo_profile, "Local State"))
 
