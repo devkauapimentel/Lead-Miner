@@ -184,21 +184,21 @@ class PegadorApp(ctk.CTk):
             side="left", padx=(0, 8))
             
         self.number_var = ctk.StringVar()
+        self.number_var.trace_add("write", self._format_phone)
         
         self.entry_number = ctk.CTkEntry(row_num, placeholder_text="+55 (21) 99453-8190", textvariable=self.number_var)
         self.entry_number.pack(side="left", fill="x", expand=True)
-        self.entry_number.bind("<FocusOut>", self._format_phone)
 
         # --- Chrome ---
-        ctk.CTkLabel(scroll, text="🌐 Conexão do WhatsApp",
+        ctk.CTkLabel(scroll, text="🌐 Conexão do WhatsApp (Automática)",
                       font=ctk.CTkFont(size=14, weight="bold")).pack(
             anchor="w", pady=(15, 5))
             
         self.chrome_mode_var = ctk.StringVar(value="profile")
-        row_mode_chrome = ctk.CTkFrame(scroll, fg_color="transparent")
-        row_mode_chrome.pack(fill="x", pady=(2, 10))
-        ctk.CTkRadioButton(row_mode_chrome, text="🎯 Usar Perfil Clonado (Não precisa ler QR code)", variable=self.chrome_mode_var, value="profile").pack(side="left", padx=(10, 20))
-        ctk.CTkRadioButton(row_mode_chrome, text="🔗 Usar Chrome Modo Debug", variable=self.chrome_mode_var, value="remote").pack(side="left")
+        info_frame = ctk.CTkFrame(scroll, fg_color="#2b2b2b")
+        info_frame.pack(fill="x", pady=(2, 10))
+        ctk.CTkLabel(info_frame, text="✅ O robô clona seu perfil atual do Chrome silenciosamente.\nVocê já entra com o WhatsApp logado automaticamente!", 
+                     text_color="lightgreen", justify="left").pack(padx=10, pady=10, anchor="w")
 
         row_chrome_bin = ctk.CTkFrame(scroll, fg_color="transparent")
         row_chrome_bin.pack(fill="x", pady=2)
@@ -651,14 +651,24 @@ class PegadorApp(ctk.CTk):
             self.timer_job = self.after(1000, self._update_timer)
 
 
-    def _format_phone(self, event=None):
-        """Formata automaticamente o número no entry ao sair do campo (FocusOut)."""
+    def _format_phone(self, *args):
+        """Formata automaticamente o número no entry em tempo real."""
+        if getattr(self, "_is_formatting", False):
+            return
+            
         raw = self.number_var.get()
         import re
         digits = re.sub(r'\D', '', raw)
         
         if not digits:
+            if raw != "":
+                self._is_formatting = True
+                self.number_var.set("")
+                self._is_formatting = False
             return
+            
+        cursor_pos = self.entry_number.index(ctk.INSERT)
+        was_at_end = cursor_pos >= len(raw) - 1
             
         formatted = f"+{digits[:2]}"
         if len(digits) > 2:
@@ -670,7 +680,14 @@ class PegadorApp(ctk.CTk):
                 formatted += f" {digits[4:]}"
                 
         if raw != formatted:
+            self._is_formatting = True
             self.number_var.set(formatted)
+            self._is_formatting = False
+            
+            if was_at_end:
+                self.entry_number.after(10, lambda: self.entry_number.icursor("end"))
+            else:
+                self.entry_number.after(10, lambda: self.entry_number.icursor(cursor_pos))
 
 
 def run_gui():
