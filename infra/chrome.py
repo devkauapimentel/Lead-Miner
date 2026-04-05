@@ -101,16 +101,23 @@ class ChromeManager:
             )
 
     def _criar_driver_perfil(self) -> webdriver.Chrome:
-        """
-        Cria nova instância do Chrome com perfil copiado.
-        Modo padrão — abre um Chrome novo.
-        """
-        self.copiar_perfil()
+        """Cria Chrome via injeção de profile."""
         binary = self.detectar_binario()
 
         options = webdriver.ChromeOptions()
-        options.add_argument(f"--user-data-dir={self.robo_profile}")
-        options.add_argument("--profile-directory=Default")
+        
+        if self.mode == "real":
+            log.info("[*] Modo REAL: Usando diretório de perfil autêntico do usuário...")
+            exact = self.detectar_perfil_exato()
+            user_data_dir = os.path.dirname(exact)
+            profile_dir = os.path.basename(exact)
+            options.add_argument(f"--user-data-dir={user_data_dir}")
+            options.add_argument(f"--profile-directory={profile_dir}")
+        else:
+            log.info("[*] Modo ISOLADO: Usando ou criando perfil do robô vazio...")
+            self.copiar_perfil()
+            options.add_argument(f"--user-data-dir={self.robo_profile}")
+            options.add_argument("--profile-directory=Default")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--no-sandbox")
         options.add_argument("--remote-allow-origins=*")

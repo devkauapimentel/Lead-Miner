@@ -190,15 +190,17 @@ class PegadorApp(ctk.CTk):
         self.entry_number.pack(side="left", fill="x", expand=True)
 
         # --- Chrome ---
-        ctk.CTkLabel(scroll, text="🌐 Conexão do WhatsApp (Automática)",
+        ctk.CTkLabel(scroll, text="🌐 Estratégia de Navegador",
                       font=ctk.CTkFont(size=14, weight="bold")).pack(
             anchor="w", pady=(15, 5))
             
-        self.chrome_mode_var = ctk.StringVar(value="profile")
-        info_frame = ctk.CTkFrame(scroll, fg_color="#2b2b2b")
-        info_frame.pack(fill="x", pady=(2, 10))
-        ctk.CTkLabel(info_frame, text="✅ O robô clona seu perfil atual do Chrome silenciosamente.\nVocê já entra com o WhatsApp logado automaticamente!", 
-                     text_color="lightgreen", justify="left").pack(padx=10, pady=10, anchor="w")
+        self.chrome_mode_var = ctk.StringVar(value=self.config.get("chrome", {}).get("mode", "real"))
+        
+        radio_frame = ctk.CTkFrame(scroll, fg_color="transparent")
+        radio_frame.pack(fill="x", pady=(2, 10))
+        
+        ctk.CTkRadioButton(radio_frame, text="💻 Chrome Real (Login Nativo. Feche seu navegador original)", variable=self.chrome_mode_var, value="real").pack(anchor="w", pady=5)
+        ctk.CTkRadioButton(radio_frame, text="🤖 Robô Isolado (Independente. Requer ler QR Code)", variable=self.chrome_mode_var, value="isolated").pack(anchor="w", pady=5)
 
         row_chrome_bin = ctk.CTkFrame(scroll, fg_color="transparent")
         row_chrome_bin.pack(fill="x", pady=2)
@@ -432,8 +434,6 @@ class PegadorApp(ctk.CTk):
         ] if blacklist_text else []
 
         chrome_bin = self.entry_chrome_bin.get().strip() or "auto"
-        chrome_profile = self.entry_chrome_profile.get().strip() or "~/.config/google-chrome"
-
         
         import re
         raw_number = re.sub(r'\D', '', self.entry_number.get())
