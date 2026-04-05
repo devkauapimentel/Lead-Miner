@@ -107,34 +107,17 @@ class ChromeManager:
         options = webdriver.ChromeOptions()
         
         if self.mode == "real":
-            log.info("[*] Modo REAL: Lançando Chrome nativo via Subprocess (bypass de bloqueio de Chaves OS)")
+            log.info("[*] Modo REAL: Usando Option Flags seguras para herdar o Chrome Autêntico...")
             exact = self.detectar_perfil_exato()
             user_data_dir = os.path.dirname(exact)
             profile_dir = os.path.basename(exact)
             
-            import subprocess
-            import time
-            
-            # Matar TODAS as instâncias do Chrome. Se o Chrome original estiver rodando em background (mesmo fechado), ele rouba a sessão e não abre a porta 9222!
-            log.info("[*] Fechando instâncias do Chrome em background para forçar controle...")
             os.system("pkill -f chrome")
             time.sleep(2)
             
-            comando = [
-                binary,
-                "--remote-debugging-port=9222",
-                "--remote-allow-origins=*",
-                "--ozone-platform-hint=auto",
-                f"--user-data-dir={user_data_dir}",
-                f"--profile-directory={profile_dir}"
-            ]
-            
-            # Executar sem DEVNULL no stderr para podermos pegar erros no log se crashar
-            subprocess.Popen(comando, stdout=subprocess.DEVNULL)
-            log.info("[*] Aguardando 4s para o Chrome nativo processar o GNOME Keyring e abrir WebSocket...")
-            time.sleep(4)
-            
-            options.debugger_address = "127.0.0.1:9222"
+            options.add_argument(f"--user-data-dir={user_data_dir}")
+            options.add_argument(f"--profile-directory={profile_dir}")
+            # Importante: SEM --no-sandbox e SEM --password-store para garantir acesso ao GNOME Keyring
         else:
             log.info("[*] Modo ISOLADO: Usando ou criando perfil do robô vazio...")
             self.copiar_perfil()
@@ -142,10 +125,12 @@ class ChromeManager:
             options.add_argument("--profile-directory=Default")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--no-sandbox")
-            options.add_argument("--remote-allow-origins=*")
-            options.add_experimental_option("excludeSwitches", ["enable-automation"])
-            options.add_experimental_option("useAutomationExtension", False)
-            options.binary_location = binary
+            
+        # Compatibilidade universal
+        options.add_argument("--remote-allow-origins=*")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("useAutomationExtension", False)
+        options.binary_location = binary
 
         driver = webdriver.Chrome(options=options)
         log.info("[✓] Chrome WebDriver criado")
