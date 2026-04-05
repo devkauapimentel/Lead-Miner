@@ -1,0 +1,29 @@
+{
+  "business_name": "Consultório Odontológico",
+  "own_number": "",
+  "chrome": {
+    "profile_path": "~/.config/google-chrome",
+    "binary": "auto"
+  },
+  "labels": {
+    "include": ["Orçamento", "Interessado", "Indicação", "Lead Anuncio"],
+    "exclude": ["Paciente ativo", "Concluído", "Agendada"]
+  },
+  "filter_mode": "labels",
+  "keywords": {
+    "include": [
+      "valor", "preço", "orçamento", "consulta",
+      "implante", "clareamento", "lente", "faceta",
+      "canal", "extração", "agendar", "quanto custa"
+    ],
+    "exclude": [
+      "agendado", "confirmado", "comprovante", "pagamento"
+    ]
+  },
+  "auto_lead_names": ["anúncio", "anuncio", "ads"],
+  "blacklist_names": [],
+  "scraper": {
+    "max_contacts": null,
+    "internal_scrolls": 15
+  }
+}

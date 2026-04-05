@@ -1,0 +1,29 @@
+{
+  "business_name": "Escritório de Advocacia",
+  "own_number": "",
+  "chrome": {
+    "profile_path": "~/.config/google-chrome",
+    "binary": "auto"
+  },
+  "labels": {
+    "include": ["Consulta inicial", "Indicação", "Lead Anuncio", "Interessado"],
+    "exclude": ["Cliente ativo", "Caso encerrado", "Honorários pagos"]
+  },
+  "filter_mode": "labels",
+  "keywords": {
+    "include": [
+      "valor", "consulta", "honorários", "quanto custa",
+      "processo", "advogado", "direito", "ação",
+      "divórcio", "trabalhista", "indenização"
+    ],
+    "exclude": [
+      "contrato assinado", "pagamento", "confirmado"
+    ]
+  },
+  "auto_lead_names": ["anúncio", "anuncio", "ads"],
+  "blacklist_names": [],
+  "scraper": {
+    "max_contacts": null,
+    "internal_scrolls": 10
+  }
+}

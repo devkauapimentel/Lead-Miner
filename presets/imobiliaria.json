@@ -1,0 +1,29 @@
+{
+  "business_name": "Imobiliária / Corretor",
+  "own_number": "",
+  "chrome": {
+    "profile_path": "~/.config/google-chrome",
+    "binary": "auto"
+  },
+  "labels": {
+    "include": ["Lead imóvel", "Visita agendada", "Lead Anuncio", "Interessado"],
+    "exclude": ["Comprou", "Desistiu", "Contrato assinado"]
+  },
+  "filter_mode": "labels",
+  "keywords": {
+    "include": [
+      "valor", "preço", "aluguel", "comprar", "apartamento",
+      "casa", "terreno", "condomínio", "financiamento",
+      "visitar", "agendar visita", "fotos", "disponível"
+    ],
+    "exclude": [
+      "contrato assinado", "comprou", "mudou", "desistiu"
+    ]
+  },
+  "auto_lead_names": ["anúncio", "anuncio", "ads"],
+  "blacklist_names": [],
+  "scraper": {
+    "max_contacts": null,
+    "internal_scrolls": 10
+  }
+}

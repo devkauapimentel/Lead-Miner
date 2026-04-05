@@ -1,7 +1,9 @@
-# 🤖 Pegador de Contato — WhatsApp Lead Scraper
+# 🤖 Pegador de Contato v2.0 — WhatsApp Lead Scraper
 
-Extrator automático de leads do WhatsApp Web para remarketing.
-Percorre todas as conversas, filtra por palavras-chave de anúncios do Facebook Ads, e salva os números de telefone em CSV.
+Extrator automático de leads do WhatsApp Business Web para remarketing.
+Filtra contatos por **Etiquetas (Labels)** do WhatsApp e salva os números em CSV.
+
+> **v2.0** — Agora com GUI visual, configuração por arquivo, presets por tipo de negócio, e filtragem por etiquetas do WhatsApp Business.
 
 ---
 
@@ -10,141 +12,153 @@ Percorre todas as conversas, filtra por palavras-chave de anúncios do Facebook 
 ### 1. Primeira vez (configuração)
 
 ```bash
-cd ~/Documents/Projects/Pegador-De-Contato
+cd ~/Documents/01\ -\ Projects/Pegador-De-Contato
 
-# Instalar dependências (uma vez só)
-sudo apt install python3.12-venv -y
+# Criar ambiente virtual e instalar dependências
 python3 -m venv venv
-./venv/bin/pip install -r requirements.txt
+venv/bin/pip install -r requirements.txt
 ```
 
-### 2. Rodar a extração
+### 2. Abrir a Interface Visual (GUI)
 
 ```bash
-# Fechar Chrome, limpar dados anteriores, e iniciar
-pkill -f "chrome-unstable" 2>/dev/null; sleep 2
-cd ~/Documents/Projects/Pegador-De-Contato
-rm -f progresso.json leads_remarketing.csv scraper.log
-source venv/bin/activate
-python whatsapp_lead_scraper.py
+# Fechar Chrome antes!
+pkill -f "chrome" 2>/dev/null; sleep 2
+
+venv/bin/python main.py
 ```
 
-> **⚠️ Importante:** Feche TODAS as janelas do Chrome antes de rodar!
+A janela vai abrir com 2 abas:
+1. **⚙️ Configuração** — Selecione suas etiquetas de inclusão/exclusão, dados do negócio, preset
+2. **🚀 Execução** — Clique em INICIAR e acompanhe em tempo real
 
-O script vai:
-1. Abrir o Chrome com sua sessão salva (WhatsApp já logado)
-2. Percorrer cada conversa da lista lateral
-3. Filtrar por palavras-chave
-4. Extrair os números de telefone
-5. Salvar em `leads_remarketing.csv`
-
-### 3. Retomar de onde parou
-
-Se o script for interrompido (Ctrl+C, queda de energia, etc.), basta rodar novamente **sem** deletar os arquivos:
+### 3. Usar pelo Terminal (CLI)
 
 ```bash
-source venv/bin/activate
-python whatsapp_lead_scraper.py
+venv/bin/python main.py --cli
 ```
 
-Ele retoma do último contato processado automaticamente (progresso salvo em `progresso.json`).
+Menu interativo com setas e espaço para selecionar etiquetas.
 
-### 4. Recomeçar do zero
+### 4. Retomar de onde parou
 
+Basta rodar novamente sem limpar os dados:
 ```bash
-rm -f progresso.json leads_remarketing.csv scraper.log
-source venv/bin/activate
-python whatsapp_lead_scraper.py
+venv/bin/python main.py
+```
+
+### 5. Recomeçar do zero
+
+Na GUI: clique em "🗑️ Limpar Progresso".
+
+Ou manualmente:
+```bash
+rm -f data/progresso.json data/leads_remarketing.csv data/scraper.log
 ```
 
 ---
 
-## 📁 Arquivos do Projeto
+## 📁 Estrutura do Projeto
 
-| Arquivo | Descrição |
-|---|---|
-| `whatsapp_lead_scraper.py` | Script principal |
-| `leads_remarketing.csv` | CSV com os leads extraídos (atualizado em tempo real) |
-| `progresso.json` | Progresso da execução (para retomar) |
-| `scraper.log` | Log completo com timestamps |
-| `chrome_profile_robo/` | Cópia do perfil do Chrome (sessão do WhatsApp) |
-| `requirements.txt` | Dependências Python |
+```
+Pegador-De-Contato/
+├── main.py                  # Ponto de entrada (GUI ou --cli)
+├── config.json              # Suas regras de negócio
+│
+├── core/                    # Lógica de negócio
+│   ├── config_manager.py    # Gerenciador de configuração
+│   ├── engine.py            # Motor de extração (Selenium)
+│   ├── facade.py            # Fachada (ponto de entrada único)
+│   └── filters.py           # Estratégias de filtragem
+│
+├── infra/                   # Infraestrutura
+│   ├── chrome.py            # Gerenciador do Chrome
+│   ├── exporters.py         # Exportador CSV
+│   ├── logger.py            # Logger dual
+│   └── phone_utils.py       # Utilitários de telefone
+│
+├── ui/                      # Interfaces
+│   ├── gui.py               # Interface visual (CustomTkinter)
+│   └── cli.py               # Interface terminal (questionary)
+│
+├── presets/                  # Configurações por tipo de negócio
+│   ├── clinica_estetica.json
+│   ├── dentista.json
+│   ├── advogado.json
+│   └── imobiliaria.json
+│
+├── data/                    # Dados de execução (gerados)
+│   ├── leads_remarketing.csv
+│   ├── progresso.json
+│   └── scraper.log
+│
+└── whatsapp_lead_scraper_legacy.py  # Script original v1.0
+```
 
 ---
 
-## ⚙️ Configurações
+## ⚙️ Configuração
 
-Edite o topo do arquivo `whatsapp_lead_scraper.py`:
+Edite via GUI ou diretamente no `config.json`:
 
-```python
-SCROLLS_INTERNOS = 5          # Scrolls para cima em cada conversa
-MAX_CONTATOS = None            # None = todos, 10 = teste rápido
-NUMERO_PROPRIO = '5521994538190'   # Seu número (excluído dos resultados)
-NUMERO_BUSINESS = '5521987642940'  # Número Business (excluído)
+```json
+{
+  "business_name": "Clínica Dra. Rosângela",
+  "own_number": "5521994538190",
+  "labels": {
+    "include": ["Lead Anuncio", "Repescagem"],
+    "exclude": ["Agendada", "Consulta paga"]
+  },
+  "filter_mode": "labels"
+}
 ```
 
-### Filtros de palavras-chave
+### Presets
 
-```python
-TODOS_OS_TERMOS = [
-    'criodefine', 'valor', 'preço', 'agendar',
-    'consulta', 'avaliação', 'resultados', ...
-]
-```
-
-Adicione ou remova termos conforme seus anúncios.
+Carregar configuração pronta:
+- `clinica_estetica` — Clínicas de estética
+- `dentista` — Consultórios odontológicos
+- `advogado` — Escritórios de advocacia
+- `imobiliaria` — Corretores de imóveis
 
 ---
 
 ## 🔍 Como Funciona a Filtragem
 
 ```
-Contato não salvo (número no título)?
-  └─ SIM → É lead novo! Salva o número direto (sem clicar) ⚡
-  └─ NÃO → Abre a conversa:
-       └─ Palavras-chave nas mensagens visíveis?
-            └─ SIM → Abre "Dados do contato" → Extrai número
-            └─ NÃO → Scroll para cima (busca saudações antigas)
-                 └─ Encontrou? → Extrai número
-                 └─ Não? → Pula ❌
+Contato na lista lateral
+  └─ É Grupo? → PULA
+  └─ Na Lista Negra? → PULA
+  └─ Número Próprio? → PULA
+  └─ Já Processado? → PULA
+  └─ Abre 'Dados do Contato'
+     └─ Lê Etiquetas
+        └─ Tem tag de EXCLUSÃO? (Agendada, Consulta paga) → PULA 🚫
+        └─ Tem tag de INCLUSÃO? (Lead Anuncio, Repescagem) → EXTRAI ✅
+        └─ Nenhuma tag relevante → PULA ❌
 ```
 
 ---
 
 ## 📊 Relatório Final
 
-Ao terminar, o script exibe:
-
-```
-==================================================
-  Processados: 5000
-  Leads novos: 847
-  Taxa conversão: 16.9%
-  Velocidade: 4.2s/contato
-  Tempo: 5h 49min
-
-  Por DDD:
-    21 (RJ): 612 leads
-    11 (SP): 98 leads
-==================================================
-```
+Ao terminar, exibe no log e na GUI:
+- Processados, Leads novos, Taxa de conversão
+- Velocidade por contato, Tempo total
+- Distribuição por DDD
 
 ---
 
 ## ❓ Problemas Comuns
 
 ### "Chrome instance exited"
-→ Feche todas as janelas do Chrome antes de rodar.
+→ Feche todas as janelas do Chrome antes.
 
 ### "Sessão do WhatsApp expirou / QR Code"
-→ Delete a pasta `chrome_profile_robo/` e rode novamente. Na primeira execução, será criada uma nova cópia do seu perfil.
+→ Delete `chrome_profile_robo/` e rode novamente.
 
-```bash
-rm -rf chrome_profile_robo/
-```
+### "Nenhuma etiqueta selecionada"
+→ Configure na aba "⚙️ Configuração" da GUI.
 
-### "O script parou no meio"
-→ Rode novamente sem deletar `progresso.json` — ele retoma de onde parou.
-
-### "Quero ver o que aconteceu durante a noite"
-→ Abra o arquivo `scraper.log` — contém o log completo com horários.
+### "customtkinter não instalado"
+→ Rode: `venv/bin/pip install -r requirements.txt`
