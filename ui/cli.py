@@ -1,6 +1,6 @@
 """
-ui/cli.py — Interface de Terminal Premium
-==========================================
+ui/cli.py — Interface de Terminal (Lead Miner)
+==============================================
 Terminal interativo com design moderno, cores e UX pensada
 para leigos: explicações claras em cada passo.
 """
@@ -24,7 +24,7 @@ if BASE_DIR not in sys.path:
 
 from core.config_manager import ConfigManager, KNOWN_LABELS
 
-log = logging.getLogger("pegador")
+log = logging.getLogger("lead_miner")
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -71,8 +71,8 @@ def banner():
     print(f"""
   {C.CYN}╔{'═' * 52}╗
   ║{C.R}                                                    {C.CYN}║
-  ║{C.R}   {C.B}{C.WHT}⚡  P E G A D O R   D E   C O N T A T O{C.R}          {C.CYN}║
-  ║{C.R}   {C.GRY}v2.0 — Extrator de Leads WhatsApp Business{C.R}     {C.CYN}║
+  ║{C.R}   {C.B}{C.WHT}⛏️  L E A D   M I N E R{C.R}                      {C.CYN}║
+  ║{C.R}   {C.GRY}v2.0.0-beta — WhatsApp Lead Extractor{C.R}          {C.CYN}║
   ║{C.R}                                                    {C.CYN}║
   ╚{'═' * 52}╝{C.R}
 """)
@@ -485,16 +485,16 @@ def start_extraction(config, cm):
 """)
 
     try:
-        from core.facade import PegadorDeContato
-        pegador = PegadorDeContato()
-        pegador.start()
+        from core.facade import LeadMinerFacade
+        miner = LeadMinerFacade()
+        miner.start()
     except KeyboardInterrupt:
         print(f"\n  {C.YLW}⏹ Interrompido pelo usuário. Progresso salvo.{C.R}")
     except Exception as e:
         err(f"Erro: {e}")
     finally:
-        if 'pegador' in dir() and pegador:
-            pegador.cleanup()
+        if 'miner' in dir() and miner:
+            miner.cleanup()
 
     wait_enter()
 

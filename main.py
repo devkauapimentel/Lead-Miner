@@ -1,6 +1,6 @@
 """
-main.py — Ponto de Entrada do Pegador de Contato v2.0
-======================================================
+main.py — Ponto de Entrada do Lead Miner v2.0.0-beta
+=====================================================
 Uso:
     python main.py            → Abre a GUI (interface visual)
     python main.py --cli      → Abre o menu interativo no terminal
@@ -19,7 +19,7 @@ if BASE_DIR not in sys.path:
 def show_help():
     """Exibe ajuda de uso."""
     print("""
-  ⚡ Pegador de Contato v2.0
+  ⛏️  Lead Miner v2.0.0-beta
   ─────────────────────────────
 
   Uso:

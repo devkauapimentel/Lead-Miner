@@ -1,6 +1,6 @@
-# Regras de Negócio e Comportamento - Pegador de Contatos v2.0
+# Regras de Negócio e Comportamento — Lead Miner v2.0.0-beta
 
-Este documento descreve as regras de negócio completas, lógicas de filtragem e procedimentos técnicos do projeto **Pegador de Contato** (extrator de leads do WhatsApp Web).
+Este documento descreve as regras de negócio completas, lógicas de filtragem e procedimentos técnicos do projeto **Lead Miner** (extrator de leads do WhatsApp Web).
 
 > **⚠️ LEITURA OBRIGATÓRIA ANTES DE QUALQUER ALTERAÇÃO:**
 > Leia o arquivo [`CHANGELOG.md`](./CHANGELOG.md) para entender o histórico completo de mudanças, bugs resolvidos e decisões técnicas já tomadas. Isso evita regressões e retrabalho.
@@ -55,11 +55,12 @@ Antes de qualquer commit, confirme:
 
 ## 1. Visão Geral
 
-O software v2.0 é um sistema modular e reutilizável de extração de leads do WhatsApp Business Web. Ele automatiza o processo de percorrer conversas, identificar potenciais clientes (leads) através de **Etiquetas (Labels)** do WhatsApp Business, e salvar seus números em um CSV para campanhas de remarketing.
+O **Lead Miner v2.0.0-beta** (anteriormente Pegador de Contato) é um sistema modular e reutilizável de extração de leads do WhatsApp Business Web. Ele automatiza o processo de percorrer conversas, identificar potenciais clientes (leads) através de **Etiquetas (Labels)** do WhatsApp Business, e salvar seus números em um CSV para campanhas de remarketing.
 
-### Diferenças da v1.0 para a v2.0
-| Aspecto | v1.0 (Legacy) | v2.0 (Atual) |
+### Evolução do Projeto
+| Aspecto | v1.0.0 (Legacy) | v2.0.0-beta (Atual) |
 |---------|---------------|--------------|
+| Nome | Pegador de Contato | **Lead Miner** |
 | Filtragem | Palavras-chave no chat | Etiquetas do WhatsApp Business |
 | Config | Hardcoded no Python | Arquivo JSON externo |
 | Interface | Nenhuma (editar código) | GUI (CustomTkinter) + CLI (questionary) |
@@ -73,7 +74,7 @@ O sistema utiliza 4 Design Patterns:
 - **Strategy Pattern** (filtros): Permite trocar a lógica de filtragem sem alterar o motor
 - **Configuration Pattern** (config.json): Regras de negócio fora do código
 - **Observer Pattern** (eventos): Motor emite eventos; Log, CSV e GUI reagem
-- **Facade Pattern** (PegadorDeContato): Ponto de entrada único
+- **Facade Pattern** (LeadMinerFacade): Ponto de entrada único
 
 ### Estrutura de Camadas
 ```
@@ -82,7 +83,7 @@ Interface (GUI/CLI) → Fachada → Motor + Filtros → Chrome + CSV + Logger
 
 ### Estrutura de Diretórios
 ```
-Pegador-De-Contato/
+Lead-Miner/
 ├── main.py                  # Ponto de entrada (GUI ou CLI)
 ├── config.json              # Configuração ativa do negócio
 ├── CHANGELOG.md             # ⬅️ Histórico de todas as modificações
@@ -90,7 +91,7 @@ Pegador-De-Contato/
 ├── requirements.txt         # Dependências Python
 ├── core/
 │   ├── engine.py            # Motor de extração (ScraperEngine)
-│   ├── facade.py            # Fachada (PegadorDeContato)
+│   ├── facade.py            # Fachada (LeadMinerFacade)
 │   ├── filters.py           # Estratégias de filtragem
 │   └── config_manager.py    # Gerenciador de configuração
 ├── infra/
@@ -102,6 +103,7 @@ Pegador-De-Contato/
 │   ├── gui.py               # Interface visual (CustomTkinter)
 │   └── cli.py               # Interface terminal (questionary)
 ├── presets/                  # Configs prontas por segmento
+├── assets/                  # Identidade Visual (branding)
 ├── data/                    # Dados de execução (CSV, logs, progresso)
 └── .agents/workflows/       # Regras de Git e Versionamento
 ```

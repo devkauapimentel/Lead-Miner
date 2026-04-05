@@ -13,7 +13,7 @@ import json
 import logging
 import copy
 
-log = logging.getLogger("pegador")
+log = logging.getLogger("lead_miner")
 
 
 # Configuração padrão — usada na primeira execução

@@ -1,11 +1,11 @@
 """
-ui/gui.py — Interface Visual (CustomTkinter)
+ui/gui.py — Interface Visual (Lead Miner)
 =============================================
 Janela moderna com dark mode, 2 abas:
   1. Configuração — selecionar tags, número, chrome, presets
   2. Execução — iniciar, progresso, log, exportar
 
-Usável por leigos: tudo por checkboxes e botões.
+⛏️ Powered by Lead Miner v2.0.0-beta
 """
 
 import os
@@ -28,9 +28,9 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 from core.config_manager import ConfigManager, KNOWN_LABELS
-from core.facade import PegadorDeContato
+from core.facade import LeadMinerFacade
 
-log = logging.getLogger("pegador")
+log = logging.getLogger("lead_miner")
 
 
 class GUIObserver:
@@ -39,7 +39,7 @@ class GUIObserver:
     Roda na thread principal através de after() do Tkinter.
     """
 
-    def __init__(self, app: 'PegadorApp'):
+    def __init__(self, app: 'LeadMinerApp'):
         self.app = app
 
     def on_event(self, event_type: str, data: dict) -> None:
@@ -96,9 +96,9 @@ class GUIObserver:
             self.app.on_finished(data)
 
 
-class PegadorApp(ctk.CTk):
+class LeadMinerApp(ctk.CTk):
     """
-    Aplicação principal com CustomTkinter.
+    Aplicação principal Lead Miner com CustomTkinter.
 
     2 Abas:
         - Config: Editar regras de negócio, chrome, presets
@@ -109,7 +109,7 @@ class PegadorApp(ctk.CTk):
         super().__init__()
 
         # Configuração da janela
-        self.title("⚡ Pegador de Contato v2.0")
+        self.title("⛏️ Lead Miner v2.0.0-beta")
         self.geometry("650x550")
         self.minsize(550, 450)
 
@@ -137,13 +137,13 @@ class PegadorApp(ctk.CTk):
 
         ctk.CTkLabel(
             header,
-            text="⚡ Pegador de Contato",
+            text="⛏️ Lead Miner",
             font=ctk.CTkFont(size=24, weight="bold"),
         ).pack(side="left")
 
         ctk.CTkLabel(
             header,
-            text="v2.0",
+            text="v2.0.0-beta",
             font=ctk.CTkFont(size=12),
             text_color="gray",
         ).pack(side="left", padx=(8, 0), pady=(8, 0))
@@ -338,7 +338,7 @@ class PegadorApp(ctk.CTk):
         btn_frame.pack(fill="x", padx=10, pady=(15, 10))
 
         self.btn_start = ctk.CTkButton(
-            btn_frame, text="▶  INICIAR EXTRAÇÃO",
+            btn_frame, text="⛏️  INICIAR MINERAÇÃO",
             font=ctk.CTkFont(size=15, weight="bold"),
             height=45, fg_color="#1a8f3c", hover_color="#15722f",
             command=self._start_extraction,
@@ -547,6 +547,7 @@ class PegadorApp(ctk.CTk):
         # Salvar config primeiro
         self._save_config()
 
+        self.miner = None
         self.running = True
         self.start_time = time.time()
         self.btn_start.configure(state="disabled")
@@ -569,10 +570,10 @@ class PegadorApp(ctk.CTk):
     def _run_extraction(self):
         """Executa a extração (roda em thread separada)."""
         try:
-            self.pegador = PegadorDeContato()
+            self.miner = LeadMinerFacade()
             gui_observer = GUIObserver(self)
-            self.pegador.set_gui_observer(gui_observer)
-            self.pegador.start()
+            self.miner.set_gui_observer(gui_observer)
+            self.miner.start()
         except Exception as e:
             self.after(0, self.add_log, f"❌ Erro: {str(e)}")
         finally:
@@ -580,8 +581,8 @@ class PegadorApp(ctk.CTk):
 
     def _stop_extraction(self):
         """Para a extração."""
-        if self.pegador:
-            self.pegador.stop()
+        if self.miner:
+            self.miner.stop()
         self.add_log("⏹ Parando extração...")
 
     def _on_extraction_done(self):
@@ -592,8 +593,8 @@ class PegadorApp(ctk.CTk):
         self.btn_start.configure(state="normal")
         self.btn_stop.configure(state="disabled")
 
-        if self.pegador:
-            self.pegador.cleanup()
+        if self.miner:
+            self.miner.cleanup()
 
         self.add_log("✅ Extração finalizada!")
 
@@ -697,7 +698,7 @@ class PegadorApp(ctk.CTk):
 
 def run_gui():
     """Função de entrada para iniciar a GUI."""
-    app = PegadorApp()
+    app = LeadMinerApp()
     app.mainloop()
 
 

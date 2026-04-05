@@ -1,6 +1,6 @@
 """
-core/facade.py — Fachada do Sistema (Facade Pattern)
-=====================================================
+core/facade.py — Fachada do Sistema (Lead Miner Facade)
+======================================================
 Ponto de entrada único que esconde toda a complexidade.
 A GUI e o CLI chamam APENAS esta classe.
 """
@@ -14,12 +14,12 @@ from infra.chrome import ChromeManager
 from infra.logger import setup_logger, LogObserver
 from infra.exporters import CSVExporter
 
-log = logging.getLogger("pegador")
+log = logging.getLogger("lead_miner")
 
 
-class PegadorDeContato:
+class LeadMinerFacade:
     """
-    Fachada principal do sistema.
+    Fachada principal do sistema Lead Miner.
 
     Design Pattern: Facade
         Esconde a complexidade de configurar Chrome, Filter,
@@ -27,13 +27,13 @@ class PegadorDeContato:
         start(), stop(), e status().
 
     Uso pela GUI:
-        pegador = PegadorDeContato()
-        pegador.start()  # faz TUDO
-        pegador.stop()   # para a execução
+        miner = LeadMinerFacade()
+        miner.start()  # faz TUDO
+        miner.stop()   # para a execução
 
     Uso pelo CLI:
-        pegador = PegadorDeContato(config_path="meu_config.json")
-        pegador.start()
+        miner = LeadMinerFacade(config_path="meu_config.json")
+        miner.start()
     """
 
     def __init__(self, config_path: str = None):

@@ -1,9 +1,11 @@
-# 🤖 Pegador de Contato v2.0 — WhatsApp Lead Scraper
+# ⛏️ Lead Miner v2.0.0-beta — WhatsApp Lead Extractor
+
+![Lead Miner Logo](assets/logo.png)
 
 Extrator automático de leads do WhatsApp Business Web para remarketing.
 Filtra contatos por **Etiquetas (Labels)** do WhatsApp e salva os números em CSV.
 
-> **v2.0** — Agora com GUI visual, configuração por arquivo, presets por tipo de negócio, e filtragem por etiquetas do WhatsApp Business.
+> **v2.0.0-beta** — Agora com branding renovado (Lead Miner), GUI visual, configuração por arquivo, presets por tipo de negócio, e filtragem por etiquetas do WhatsApp Business.
 
 ---
 
@@ -12,7 +14,7 @@ Filtra contatos por **Etiquetas (Labels)** do WhatsApp e salva os números em CS
 ### 1. Primeira vez (configuração)
 
 ```bash
-cd ~/Documents/01\ -\ Projects/Pegador-De-Contato
+cd ~/Documents/01\ -\ Projects/Lead-Miner
 
 # Criar ambiente virtual e instalar dependências
 python3 -m venv venv
@@ -61,7 +63,7 @@ rm -f data/progresso.json data/leads_remarketing.csv data/scraper.log
 ## 📁 Estrutura do Projeto
 
 ```
-Pegador-De-Contato/
+Lead-Miner/
 ├── main.py                  # Ponto de entrada (GUI ou --cli)
 ├── config.json              # Suas regras de negócio
 │
@@ -87,12 +89,15 @@ Pegador-De-Contato/
 │   ├── advogado.json
 │   └── imobiliaria.json
 │
+├── assets/                  # Identidade Visual
+│   └── logo.png
+│
 ├── data/                    # Dados de execução (gerados)
 │   ├── leads_remarketing.csv
 │   ├── progresso.json
 │   └── scraper.log
 │
-└── whatsapp_lead_scraper_legacy.py  # Script original v1.0
+└── lead_miner_v1_legacy.py  # Script original v1.0 (antigo Pegador de Contato)
 ```
 
 ---

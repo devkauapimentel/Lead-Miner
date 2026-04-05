@@ -10,7 +10,7 @@ import csv
 import json
 import logging
 
-log = logging.getLogger("pegador")
+log = logging.getLogger("lead_miner")
 
 
 class CSVExporter:

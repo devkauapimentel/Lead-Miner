@@ -25,7 +25,7 @@ from selenium.common.exceptions import (
 
 from infra.phone_utils import limpar_numero, titulo_e_numero, extrair_numeros_do_texto
 
-log = logging.getLogger("pegador")
+log = logging.getLogger("lead_miner")
 
 
 class ScraperEngine:

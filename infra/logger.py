@@ -22,7 +22,7 @@ def setup_logger(log_dir: str = None) -> logging.Logger:
                  Se None, usa o diretório 'data/' relativo à raiz do projeto.
 
     Returns:
-        Logger configurado com nome 'pegador'
+        Logger configurado com nome 'lead_miner'
     """
     if log_dir is None:
         base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,7 +31,7 @@ def setup_logger(log_dir: str = None) -> logging.Logger:
     os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, "scraper.log")
 
-    logger = logging.getLogger("pegador")
+    logger = logging.getLogger("lead_miner")
 
     # Evitar handlers duplicados se chamado múltiplas vezes
     if logger.handlers:
@@ -70,7 +70,7 @@ class LogObserver:
     """
 
     def __init__(self):
-        self.logger = logging.getLogger("pegador")
+        self.logger = logging.getLogger("lead_miner")
 
     def on_event(self, event_type: str, data: dict) -> None:
         """

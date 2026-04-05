@@ -11,7 +11,7 @@ sem saber QUAL estratégia está ativa — isso é o Strategy Pattern.
 from abc import ABC, abstractmethod
 import logging
 
-log = logging.getLogger("pegador")
+log = logging.getLogger("lead_miner")
 
 
 class FilterStrategy(ABC):

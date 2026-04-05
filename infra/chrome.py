@@ -13,7 +13,7 @@ import logging
 
 from selenium import webdriver
 
-log = logging.getLogger("pegador")
+log = logging.getLogger("lead_miner")
 
 
 # Localizações comuns do Chrome no Linux
