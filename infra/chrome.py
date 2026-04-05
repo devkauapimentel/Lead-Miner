@@ -107,6 +107,7 @@ class ChromeManager:
         options = webdriver.ChromeOptions()
         
         if self.mode == "real":
+            import time
             log.info("[*] Modo REAL: Usando Option Flags seguras para herdar o Chrome Autêntico...")
             exact = self.detectar_perfil_exato()
             user_data_dir = os.path.dirname(exact)
