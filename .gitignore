@@ -1,42 +1,36 @@
-# =============================================
-# Dados pessoais (LGPD) — NUNCA versionar
-# =============================================
+# Leads e Dados Pessoais (LGPD) — NUNCA VERSIONAR
+data/leads_remarketing.csv
+data/progresso.json
+data/scraper.log
 leads_remarketing.csv
 progresso.json
 scraper.log
 
-# Sessão autenticada do navegador
+# Sessão do Navegador (Cookies/Auth) - NUNCA VERSIONAR
 chrome_profile_robo/
 
-# =============================================
-# Ambiente virtual Python
-# =============================================
+# Ambiente Virtual
 venv/
+.venv/
+env/
 
-# =============================================
-# Caches e artefatos
-# =============================================
+# Caches e Artefatos Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 .pytest_cache/
-*.egg-info/
-dist/
-build/
+.mypy_cache/
 
-# =============================================
-# Config local (contém número de telefone)
-# =============================================
-config.json
-
-# =============================================
-# IDE
-# =============================================
+# IDE e Configurações Locais
 .vscode/
 .idea/
+.project
+.pydevproject
+.settings/
+*.swp
+*.swo
 
-# =============================================
-# Dados de execução gerados
-# =============================================
-data/leads_remarketing.csv
-data/progresso.json
-data/scraper.log
+# OS
+.DS_Store
+Thumbs.db

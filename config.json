@@ -1,0 +1,57 @@
+{
+  "business_name": "Clínica de Estética",
+  "own_number": "5521994538190",
+  "chrome": {
+    "mode": "isolated",
+    "profile_path": "/home/dev_kaua/.config/google-chrome/Default.",
+    "binary": "auto"
+  },
+  "labels": {
+    "include": [
+      "Lead Anuncio",
+      "Repescagem",
+      "Esperando resposta",
+      "Dar retorno"
+    ],
+    "exclude": [
+      "Agendada",
+      "Consulta paga",
+      "Aguardando pagamento"
+    ]
+  },
+  "filter_mode": "labels",
+  "keywords": {
+    "include": [
+      "valor",
+      "preço",
+      "criodefine",
+      "crio",
+      "consulta",
+      "avaliação",
+      "diastase",
+      "agendar",
+      "resultados",
+      "como funciona",
+      "quero agendar"
+    ],
+    "exclude": [
+      "agendada com sucesso",
+      "agendado com sucesso",
+      "comprovante",
+      "transferência",
+      "pagamento",
+      "confirmado",
+      "confirmada"
+    ]
+  },
+  "auto_lead_names": [
+    "anúncio",
+    "anuncio",
+    "ads"
+  ],
+  "blacklist_names": [],
+  "scraper": {
+    "max_contacts": null,
+    "internal_scrolls": 20
+  }
+}
